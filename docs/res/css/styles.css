@@ -187,6 +187,10 @@ footer small {
   margin-bottom: 28px;
 }
 
+#list-content article.loading {
+  color: #ccc;
+}
+
 #list-content p {
   margin: 0;
 }
