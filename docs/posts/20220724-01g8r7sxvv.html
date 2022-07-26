@@ -1,4 +1,10 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ブログを自作した | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220724-01g8r7sxvv.html"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><!--<link rel="alternate" type="application/atom+xml" title="" href="">--><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css"><link rel="stylesheet" href="../res/css/github-markdown.css"><link rel="stylesheet" href="../res/css/obsidian.min.css"><meta name="title" content="ブログを自作した | Kabolog"><meta name="description" content="記事を書くのは Flutter 製デスクトップアプリ、ブラウザで表示するのは jaspr 製ページ、というブログシステムを作りました。ブログとその記事作成のアプリをそれぞれjasprとFlutterで作れば一部処理を共通化できると考えて、まずアプリだけ作った。PoC程度のつもりだったのに、欲が出てカテゴリ階層化とか複数タブ表示とか楽しくなってきちゃってるので"><meta name="keywords" content="雑記"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220724-01g8r7sxvv.html"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="ブログを自作した | Kabolog"><meta property="og:description" content="記事を書くのは Flutter 製デスクトップアプリ、ブラウザで表示するのは jaspr 製ページ、というブログシステムを作りました。ブログとその記事作成のアプリをそれぞれjasprとFlutterで作れば一部処理を共通化できると考えて、まずアプリだけ作った。PoC程度のつもりだったのに、欲が出てカテゴリ階層化とか複数タブ表示とか楽しくなってきちゃってるので"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"></head><body><div id="blog-view"><header><p><a href="../">Kabolog</a></p></header><div id="view-content"><main><h1 id="post-title">ブログを自作した</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=%E9%9B%91%E8%A8%98">雑記</a></li></ul><time datetime="2022-07-24T04:54:00.000Z">2022-07-24</time></section><article class="markdown-body"><p>記事を書くのは Flutter 製デスクトップアプリ、ブラウザで表示するのは jaspr 製ページ、というブログシステムを作りました。</p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr">ブログとその記事作成のアプリをそれぞれjasprとFlutterで作れば一部処理を共通化できると考えて、まずアプリだけ作った。<br><br>PoC程度のつもりだったのに、欲が出てカテゴリ階層化とか複数タブ表示とか楽しくなってきちゃってるので、jaspr側に移るのはいつになるかわからない。 <a href="https://t.co/R2398PeHXM" target="_blank">pic.twitter.com/R2398PeHXM</a></p>&mdash; Kabo (@kabochapo) <a href="https://twitter.com/kabochapo/status/1541777546559504387?ref_src=twsrc%5Etfw" target="_blank">June 28, 2022</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ブログを自作した | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220724-01g8r7sxvv.html"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css"><link rel="stylesheet" href="../res/css/github-markdown.css"><link rel="stylesheet" href="../res/css/obsidian.min.css"><meta name="title" content="ブログを自作した | Kabolog"><meta name="description" content="記事を書くのは Flutter 製デスクトップアプリ、ブラウザで表示するのは jaspr 製ページ、というブログシステムを作りました。ブログとその記事作成のアプリをそれぞれjasprとFlutterで作れば一部処理を共通化できると考えて、まずアプリだけ作った。PoC程度のつもりだったのに、欲が出てカテゴリ階層化とか複数タブ表示とか楽しくなってきちゃってるので"><meta name="keywords" content="雑記"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220724-01g8r7sxvv.html"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="ブログを自作した | Kabolog"><meta property="og:description" content="記事を書くのは Flutter 製デスクトップアプリ、ブラウザで表示するのは jaspr 製ページ、というブログシステムを作りました。ブログとその記事作成のアプリをそれぞれjasprとFlutterで作れば一部処理を共通化できると考えて、まずアプリだけ作った。PoC程度のつもりだったのに、欲が出てカテゴリ階層化とか複数タブ表示とか楽しくなってきちゃってるので"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-8T92E4QR06');
+</script></head><body><div id="blog-view"><header><p><a href="../">Kabolog</a></p></header><div id="view-content"><main><h1 id="post-title">ブログを自作した</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=%E9%9B%91%E8%A8%98">雑記</a></li></ul><time datetime="2022-07-24T04:54:00.000Z">2022-07-24</time></section><article class="markdown-body"><p>記事を書くのは Flutter 製デスクトップアプリ、ブラウザで表示するのは jaspr 製ページ、というブログシステムを作りました。</p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr">ブログとその記事作成のアプリをそれぞれjasprとFlutterで作れば一部処理を共通化できると考えて、まずアプリだけ作った。<br><br>PoC程度のつもりだったのに、欲が出てカテゴリ階層化とか複数タブ表示とか楽しくなってきちゃってるので、jaspr側に移るのはいつになるかわからない。 <a href="https://t.co/R2398PeHXM" target="_blank">pic.twitter.com/R2398PeHXM</a></p>&mdash; Kabo (@kabochapo) <a href="https://twitter.com/kabochapo/status/1541777546559504387?ref_src=twsrc%5Etfw" target="_blank">June 28, 2022</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 <p>その最初の記事として書きます。</p>
 <h2>ホスティング</h2>
 <p>このブログシステムは下記の理由で GitHub Pages 向けにしました。<br />
@@ -36,7 +42,7 @@ GitHub との連携が可能なので、今回作ったデスクトップアプ�
 </ul>
 <h3>jaspr との出会い</h3>
 <p>JavaScript / TypeScript は仕事などで必要なときには使っていますが、言語そのものというよりはエコシステムが苦手でなるべく触りたくありません。</p>
-<p>それでも何かウェブサイトを作るなら使うしかないと思っていたところで jaspr を知り、Flutter に近い感覚で Dart で作れることが後押しになりました。</p>
+<p>それでも何かウェブサイトを作るなら使うしかないと思っていたところで jaspr を知り、Flutter に近い感覚で Dart で作れることと使ってみたいという欲求が後押しになりました。</p>
 <h4>jaspr とは</h4>
 <p>Dart の Web フロントエンド開発フレームワークです。</p>
 <ul>
@@ -69,7 +75,7 @@ GitHub との連携が可能なので、今回作ったデスクトップアプ�
 <h3>デスクトップアプリ</h3>
 <p><code>fluent_ui</code> パッケージを使いました。<br />
 Material の widget と似た部分が非常に多いですが、おかしな挙動や微妙な違いなどがあって選定を間違えたと思っています。</p>
-<p>特にタブを切り替えても内容を保持する機能がないのが辛いです。<br />
+<p>特に、タブを切り替えても内容を保持する機能がないのが辛いです。<br />
 それに対応しているか未調査ですが、<a href="https://pub.dev/packages/libadwaita" target="_blank">libadwaita</a> にすれば良かった気がしています。</p>
 <p>余談ですが、Flutter でお近づきになった Material Design は、デスクトップでデスクトップらしい UI にしたいときには役に立たない知識だなと思いました。</p>
 <h3>SPA（問題点 1）</h3>
@@ -83,7 +89,7 @@ SPA（シングルページアプリケーション）では URL にハッシュ
 </ul>
 </li>
 </ul>
-<p>試してみると当然できたのですが、リダイレクトが UX や SEO に影響しないか不安があります。<br />
+<p>試してみると当然できたのですが、リダイレクトが UX や SEO に影響しないか不安に思いました。<br />
 また、存在しないページは「ソフト 404 エラー」にするしかないのも気になりました。</p>
 <p>jaspr には SSR の機能もありますが、GitHub Pages では使えません。</p>
 <h3>SPA（問題点 2）</h3>
