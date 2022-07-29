@@ -1,10 +1,10 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartのabstractクラスでnon-nullableなプロパティを初期化しないでおく方法 | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220724-01g8r9e3pq.html"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css"><link rel="stylesheet" href="../res/css/github-markdown.css"><link rel="stylesheet" href="../res/css/obsidian.min.css"><meta name="title" content="Dartのabstractクラスでnon-nullableなプロパティを初期化しないでおく方法 | Kabolog"><meta name="description" content="言葉だけではわかりにくいので例を見ましょう。 まず final で non-nullable なプロパティ。 abstract class Foo { final String value; } The final variable 'value' must be initialized. （final な変数である value は初期化しなければなりません"><meta name="keywords" content="Dart,小ネタ"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220724-01g8r9e3pq.html"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartのabstractクラスでnon-nullableなプロパティを初期化しないでおく方法 | Kabolog"><meta property="og:description" content="言葉だけではわかりにくいので例を見ましょう。 まず final で non-nullable なプロパティ。 abstract class Foo { final String value; } The final variable 'value' must be initialized. （final な変数である value は初期化しなければなりません"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartのabstractクラスでnon-nullableなプロパティを初期化しないでおく方法 | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220724-01g8r9e3pq"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css"><link rel="stylesheet" href="../res/css/github-markdown.css"><link rel="stylesheet" href="../res/css/obsidian.min.css"><meta name="title" content="Dartのabstractクラスでnon-nullableなプロパティを初期化しないでおく方法 | Kabolog"><meta name="description" content="言葉だけではわかりにくいので例を見ましょう。 まず final で non-nullable なプロパティ。 abstract class Foo { final String value; } The final variable 'value' must be initialized. （final な変数である value は初期化しなければなりません"><meta name="keywords" content="Dart,小ネタ"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220724-01g8r9e3pq"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartのabstractクラスでnon-nullableなプロパティを初期化しないでおく方法 | Kabolog"><meta property="og:description" content="言葉だけではわかりにくいので例を見ましょう。 まず final で non-nullable なプロパティ。 abstract class Foo { final String value; } The final variable 'value' must be initialized. （final な変数である value は初期化しなければなりません"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-8T92E4QR06');
-</script></head><body><div id="blog-view"><header><p><a href="../">Kabolog</a></p></header><div id="view-content"><main><h1 id="post-title">Dartのabstractクラスでnon-nullableなプロパティを初期化しないでおく方法</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E5%B0%8F%E3%83%8D%E3%82%BF">Dart > 小ネタ</a></li></ul><time datetime="2022-07-24T05:23:00.000Z">2022-07-24</time></section><article class="markdown-body"><p>言葉だけではわかりにくいので例を見ましょう。</p>
+</script></head><body><div id="blog-view"><header><p><a href="../">Kabolog</a></p></header><div id="view-content"><main><h1 id="post-title">Dartのabstractクラスでnon-nullableなプロパティを初期化しないでおく方法</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E5%B0%8F%E3%83%8D%E3%82%BF">Dart > 小ネタ</a></li></ul><time datetime="2022-07-24T14:23:02.419010Z">2022-07-24</time></section><article class="markdown-body"><p>言葉だけではわかりにくいので例を見ましょう。</p>
 <p>まず <code>final</code> で non-nullable なプロパティ。</p>
 <pre><code class="language-dart">abstract class Foo {  
   final String value;  
@@ -48,4 +48,22 @@ class Bar extends Foo {
 }  
 </code></pre>
 <p>ゲッターにすれば上の問題は全部解決。</p>
+<h2>おまけ</h2>
+<p>抽象クラスの話からは離れますが、ゲッターは型を狭めるのにも使えます。<br />
+上記とは違い、ゲッターにするのは子のほうです。</p>
+<p>次の例では、親クラスで nullable な <code>num?</code> 型のプロパティを子クラスで non-nullable な <code>int</code> 型に狭めています。</p>
+<pre><code class="language-dart">class MyNum {  
+  const MyNum(this.value);  
+  
+  final num? value;  
+}  
+  
+class MyInt extends MyNum {  
+  const MyInt(super.value);  
+  
+  @override  
+  int get value =&gt; super.value?.floor() ?? 0;  
+}  
+</code></pre>
+<p>他に <a href="https://qiita.com/kabochapo/items/925a2cee9199031272df#covariant" target="_blank">covariant のキーワードを使う方法</a> もあります。</p>
 </article></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 kaboc</small></footer></div><script src="../res/js/highlight.min.js"></script><script>hljs.highlightAll();</script></body></html>
