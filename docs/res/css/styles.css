@@ -183,6 +183,10 @@ footer small {
   list-style-type: circle;
 }
 
+#list-content #category-list li.sublist {
+  list-style-type: none;
+}
+
 #list-content #category-list li#current {
   list-style-type: disc;
 }
