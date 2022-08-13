@@ -9275,7 +9275,7 @@ A.k9.prototype={
 cB(a){var s=0,r=A.an(t.bG),q,p,o
 var $async$cB=A.ao(function(b,c){if(b===1)return A.ak(c,r)
 while(true)switch(s){case 0:o=$.d5.dz().e1("blog_categories_distinct_view").eu(0)
-o.b2("last_posted_at","lt."+a.cP().k(0))
+o.b2("first_posted_at","lt."+a.cP().k(0))
 s=3
 return A.ad(o.hc("category",!0).aB(),$async$cB)
 case 3:p=c
