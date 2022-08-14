@@ -1,10 +1,10 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PocketBaseハンズオン | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220813-01gabh0x88"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css"><link rel="stylesheet" href="../res/css/github-markdown.css"><link rel="stylesheet" href="../res/css/obsidian.min.css"><meta name="title" content="PocketBaseハンズオン | Kabolog"><meta name="description" content="7/7 頃に公開されました。 概要は下のツイートのとおりです。PocketBaseリアルタイムDB、Auth、Storage、ダッシュボードがあってミニSupabaseみたい。SQLiteのドライバはmodernc .org/sqliteなのでCGO不要。安価なVPS(最適化なし)でもリアルタイムDBで1万+の同時接続。Goのサーバのフレームワークとしても使"><meta name="keywords" content="Dart,データベース,バックエンド"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220813-01gabh0x88"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="PocketBaseハンズオン | Kabolog"><meta property="og:description" content="7/7 頃に公開されました。 概要は下のツイートのとおりです。PocketBaseリアルタイムDB、Auth、Storage、ダッシュボードがあってミニSupabaseみたい。SQLiteのドライバはmodernc .org/sqliteなのでCGO不要。安価なVPS(最適化なし)でもリアルタイムDBで1万+の同時接続。Goのサーバのフレームワークとしても使"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PocketBaseハンズオン | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220813-01gabh0x88"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css"><link rel="stylesheet" href="../res/css/github-markdown.css"><link rel="stylesheet" href="../res/css/obsidian.min.css"><meta name="title" content="PocketBaseハンズオン | Kabolog"><meta name="description" content="7/7 頃に公開されました。 概要は下のツイートのとおりです。PocketBaseリアルタイムDB、Auth、Storage、ダッシュボードがあってミニSupabaseみたい。SQLiteのドライバはmodernc .org/sqliteなのでCGO不要。安価なVPS(最適化なし)でもリアルタイムDBで1万+の同時接続。Goのサーバのフレームワークとしても使"><meta name="keywords" content="バックエンド,データベース,Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220813-01gabh0x88"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="PocketBaseハンズオン | Kabolog"><meta property="og:description" content="7/7 頃に公開されました。 概要は下のツイートのとおりです。PocketBaseリアルタイムDB、Auth、Storage、ダッシュボードがあってミニSupabaseみたい。SQLiteのドライバはmodernc .org/sqliteなのでCGO不要。安価なVPS(最適化なし)でもリアルタイムDBで1万+の同時接続。Goのサーバのフレームワークとしても使"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-8T92E4QR06');
-</script></head><body><div id="blog-view"><header><p><a href="../">Kabolog</a></p></header><div id="view-content"><main><h1 id="post-title">PocketBaseハンズオン</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart">Dart</a></li><li><a href="../?c=%E3%83%87%E3%83%BC%E3%82%BF%E3%83%99%E3%83%BC%E3%82%B9">データベース</a></li><li><a href="../?c=%E3%83%90%E3%83%83%E3%82%AF%E3%82%A8%E3%83%B3%E3%83%89">バックエンド</a></li></ul><time datetime="2022-08-13T11:56:54.746577Z">2022-08-13</time></section><article class="markdown-body"><body><p>7/7 頃に公開されました。<br>
+</script></head><body><div id="blog-view"><header><p><a href="../">Kabolog</a></p></header><div id="view-content"><main><h1 id="post-title">PocketBaseハンズオン</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=%E3%83%90%E3%83%83%E3%82%AF%E3%82%A8%E3%83%B3%E3%83%89">バックエンド</a></li><li><a href="../?c=%E3%83%87%E3%83%BC%E3%82%BF%E3%83%99%E3%83%BC%E3%82%B9">データベース</a></li><li><a href="../?c=Dart">Dart</a></li></ul><time datetime="2022-08-13T11:56:54.746577Z">2022-08-13</time></section><article class="markdown-body"><body><p>7/7 頃に公開されました。<br>
 概要は下のツイートのとおりです。</p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr">PocketBase<br><br>リアルタイムDB、Auth、Storage、ダッシュボードがあってミニSupabaseみたい。<br>SQLiteのドライバはmodernc .org/sqliteなのでCGO不要。<br>安価なVPS(最適化なし)でもリアルタイムDBで1万+の同時接続。<br>Goのサーバのフレームワークとしても使える。<br>DartのSDKも予定。<a href="https://t.co/l9RTe9QKSh" target="_blank" rel="noopener">https://t.co/l9RTe9QKSh</a></p>— Kabo (@kabochapo) <a href="https://twitter.com/kabochapo/status/1545186632202350592?ref_src=twsrc%5Etfw" target="_blank" rel="noopener">July 7, 2022</a></blockquote> <script async="" src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 <p>GitHub のスターがたったの数日間に数千に増え、一ヶ月ちょっと経った今では 8 k を超えています。<br>
 日本でほとんど話題になっていないのが不思議です。</p>
@@ -16,6 +16,7 @@ gtag('config', 'G-8T92E4QR06');
 <h1 id="%E3%81%93%E3%81%AE%E8%A8%98%E4%BA%8B%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6">この記事について</h1>
 <p>7 月末に <a href="https://pub.dev/packages/pocketbase" target="_blank" rel="noopener">Dart の SDK</a> がリリースされたので、ごく基本的なところ、特にデータベースの基礎だけでも触ってつかんでおこうということで試してまとめたものです。</p>
 <ul>
+<li>PocketBase 0.4.2、Dart SDK 0.2.0 時点の情報です</li>
 <li>ほぼデータベース（非リアルタイム）のことのみです</li>
 <li>Go のサーバのフレームワークとしても使えますが、今回は BaaS っぽい使い方に限っています</li>
 <li>コード例には Dart を用い、実行結果も Dart の場合のものです</li>
@@ -41,23 +42,23 @@ gtag('config', 'G-8T92E4QR06');
 次のスクショは Windows の場合です。</p>
 <p><img src="https://mxfyaoprdbheocgwuqnv.supabase.co/storage/v1/object/public/blog-images/adad99b13e754af012caee01.jpg" alt="PocketBase の起動"></p>
 <p>書かれているとおり、Admin UI の URL は <code>https://localhost:8090/_/</code> です。<br>
-初めてなら管理用アカウントの作成画面が表示されます。<br>
+初めてなら管理用アカウントの作成画面が表示されるので作成しましょう。<br>
 自分でホストするサーバなので、メールアドレス等の保存先はたぶんローカルだと思います。</p>
 <p>準備は以上です。<br>
 同種のツールでこんなにも簡単に導入できるものがかつてあったでしょうか！<br>
 Docker もいらず、あまりに手軽なので、もうこの時点で虜になりそうです。</p>
 <h1 id="%E3%83%A6%E3%83%BC%E3%82%B6">ユーザ</h1>
 <h2 id="%E7%AE%A1%E7%90%86%E7%94%BB%E9%9D%A2%E3%81%A7%E4%BD%9C%E6%88%90">管理画面で作成</h2>
-<p>冒頭に書いたとおりデータベースを少し使ってみて把握することが主旨なので、ユーザ作成は管理画面で行います。</p>
+<p>冒頭に書いたとおりデータベースを少し使ってみて把握することが主旨なので、ユーザ作成は手間を省いて管理画面で行います。</p>
 <p><img src="https://mxfyaoprdbheocgwuqnv.supabase.co/storage/v1/object/public/blog-images/f19a3b86deaa2160df0d8586.jpg" alt="ユーザ作成"></p>
-<p>また、「Edit Profile」でユーザの名前を設定しておきます。<br>
+<p>「Edit Profile」でユーザの名前も設定しておきます。<br>
 これは、どんなふうに取得できるのかを確認したいからです。<br>
 使わなければ設定不要です。</p>
 <p><img src="https://mxfyaoprdbheocgwuqnv.supabase.co/storage/v1/object/public/blog-images/9f8628a740b1bdd233465745.jpg" alt="ユーザ一覧"></p>
-<p>アバターも設定できる点もいいですね。<br>
-アプリで使うアバターにこれを使うと、その機能が存在しない別サービスに移行する場合に困るかもしれませんが。</p>
-<p>※でたらめのメールアドレスを設定する場合、万一実在すると確認メールが届いて迷惑になるので、「Send verification email」はオフにするのがいいと思います。</p>
-<p>※プロフィールやカラムのデータに日本語は使えますが、日本語入力が考慮されていません。Enter キーで保存するようになっているようで、変換確定のための Enter でも保存して閉じられてしまいます。今後の改善に期待…。</p>
+<p>アバターを設定できる点もいいですね。<br>
+アプリで使うアバターの機能がこれに依存すると、その機能が存在しない別サービスに移行するときに困るかもしれませんが。</p>
+<p>※でたらめなメールアドレスを設定する場合、万一実在すると確認メールが届いて迷惑になるので、「Send verification email」はオフにするのがいいと思います。</p>
+<p>※プロフィールやカラムのデータに日本語は使えますが、Enter キーで保存するようになっているようで、変換確定のための Enter でも保存して閉じられてしまいます。今後の改善に期待…。</p>
 <h2 id="Dart%20%E3%81%A7%E3%83%A6%E3%83%BC%E3%82%B6%E8%AA%8D%E8%A8%BC">Dart でユーザ認証</h2>
 <p>設定したメールアドレスとパスワードでログインしてみます。</p>
 <pre><code class="language-dart">import 'package:pocketbase/pocketbase.dart';  
@@ -79,13 +80,13 @@ Future&lt;void&gt; main() async {
 </code></pre>
 <p>とても簡単でした。<br>
 ユーザ ID や先ほど設定した名前を得ることができています。<br>
-プロフィールは Map なのがちょっと残念です。</p>
+プロフィールが Map になっているのはちょっと残念です。</p>
 <h3 id="%E5%BC%95%E6%95%B0%E3%81%AF%E6%94%B9%E5%96%84%E3%81%AE%E4%BD%99%E5%9C%B0%E3%81%82%E3%82%8A">引数は改善の余地あり</h3>
 <p><code>authViaEmail()</code> のように同じ型の複数の引数がある場合には、順番を間違えてもエラーにならなくて安全でないので名前付きの引数が望ましいですが、ただの positional な引数になっています。<br>
 他のメソッドでも同じ傾向なので、誰かが提案して改善を促すのが良さそうです。</p>
 <h1 id="%E3%82%B3%E3%83%AC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3">コレクション</h1>
-<p>PocketBase ではデータベースのテーブルは Collection、カラムは Field と呼ばれています。</p>
-<p>ToDo アプリを作る想定でコレクションを tasks という名前で作ります。</p>
+<p>PocketBase ではデータベースのテーブルは Collection、その中のカラムは Field と呼ばれています。</p>
+<p>ToDo アプリを作る想定でコレクションを「tasks」という名前で作ります。</p>
 <h2 id="%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89">フィールド</h2>
 <p>フィールドは二つだけにします。<br>
 その他に自動的に <code>id</code>、<code>created</code>、<code>updated</code> が作られます。</p>
@@ -94,7 +95,8 @@ Future&lt;void&gt; main() async {
 <p><img src="https://mxfyaoprdbheocgwuqnv.supabase.co/storage/v1/object/public/blog-images/e9335bda0f0870c75fc3a9cc.jpg" alt="taskフィールド"></p>
 <p>テキストがないとタスクとして成り立たないので Required を有効にしました。<br>
 Unique は無効のままにしましたが、同一テキストのタスクを複数作れないようにするなら有効にすればいいです。</p>
-<p>他に最短/最長文字数の制約を設定でき、正規表現によって形式を制限することもできます。</p>
+<p>他に最短/最長文字数の制約を設定でき、正規表現によって形式を制限することもできます。<br>
+SQL では可能なデフォルト値の設定はなぜか見当たりません。</p>
 <h3 id="user%20%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89">user フィールド</h3>
 <p>タスクを他の人が参照/更新できてはいけないので、それを制限するルールに用いるフィールドを作っておきます。</p>
 <p><code>User</code> 型については後述します。</p>
@@ -103,20 +105,20 @@ Unique は無効のままにしましたが、同一テキストのタスクを�
 <p>このフィールドの値を指定しないで作成しようとしても、後で設定する API ルールによって弾かれるので安全ですが、念のために Required は有効にしました。</p>
 <h2 id="%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89%E3%81%AE%E5%9E%8B">フィールドの型</h2>
 <p><code>Text</code>、<code>Number</code>、<code>Bool</code> のような基本的な型の他に <code>JSON</code>、<code>File</code> なども選べます。<br>
-PocketBase のデータベースは SQLite で、調べると SQLite 3.9 からは JSON が使えるようになっているそうなので、その機能を使っているのかもしれません。</p>
+PocketBase のデータベースは SQLite で、調べると SQLite 3.9 からは JSON が使えるようになっているそうなので、JSON 型にはその機能を使っているのかもしれません。</p>
 <p>さらに、<code>Relation</code> と <code>User</code> という型もあります。</p>
 <h3 id="Relation%20%E5%9E%8B">Relation 型</h3>
-<p>「TYPE」のプルダウンで <code>Relation</code> を選ぶとコレクションを選択するプルダウンが現れます。<br>
+<p>「TYPE」を <code>Relation</code> にすると、コレクションを選択するプルダウンが現れます。<br>
 試していませんが、ここでコレクション同士の関係を設定するだけで SQL の JOIN が実現できるのかなと思います。</p>
 <p>リレーションを型として設定するのはやや違和感がありますが、SQL に不慣れな人にとっては SQL を意識せずに使えて良いのかもしれません。</p>
 <p><code>ON DELETE CASCATE</code> のように他方のレコードが削除されたときに一緒に消す「DELETE RECORD ON RELATION DELETE」の設定も可能です。</p>
 <h3 id="User%20%E5%9E%8B">User 型</h3>
-<p>名前のとおりユーザの情報に使う型ですが、この設定の時点ではどんな値が設定されるのかわかりませんでした。<br>
+<p>名前のとおりユーザ情報の型ですが、この設定の時点ではどんな値が入るのかわかりませんでした。<br>
 使っているうちにわかったので、後で説明します。</p>
 <p>これも Relation の削除設定に似た「DELETE RECORD ON USER DELETE」のオプションがあります。</p>
 <h1 id="API%20%E3%83%AB%E3%83%BC%E3%83%AB">API ルール</h1>
-<p>Supabase の セキュリティポリシー、Firestore のセキュリティルールに相当するものです。</p>
-<p>Postgres には RLS（Row Level Security）の機能があるからこそ Supabase ではセキュリティポリシー可能になっているわけですが、そういったものが存在しない SQLite で同様の機能を実現しているのは偉業だなと思います。</p>
+<p>Supabase/PostgreSQL の RLS（Row Level Security）のポリシー、Firestore のセキュリティルールに相当するものです。</p>
+<p>Supabase では RLS があるからこそ可能なわけですが、そういったものが存在しない SQLite で同様の機能を実現しているのは偉業だなと思います。</p>
 <h2 id="%E3%83%AB%E3%83%BC%E3%83%AB%E8%A8%AD%E5%AE%9A">ルール設定</h2>
 <p><img src="https://mxfyaoprdbheocgwuqnv.supabase.co/storage/v1/object/public/blog-images/bc5e2bbbebd0611a6a17f48e.jpg" alt="APIルール"></p>
 <p>このように設定しました。<br>
@@ -124,12 +126,12 @@ PocketBase のデータベースは SQLite で、調べると SQLite 3.9 から�
 <p>比較対象である右辺が <code>@request.user.id</code> なので左辺は <code>@collection.tasks.user.id</code> かと思ったのですが、補完では <code>.id</code> は出てこなくて、それを付けたままではルール保存時にエラーが出ました。<br>
 それから試行錯誤してうまくいった設定がスクショの内容です。</p>
 <h3 id="User%20%E5%9E%8B%E3%81%AB%E5%85%A5%E3%82%8B%E5%80%A4%E3%81%8C%E5%88%A4%E6%98%8E">User 型に入る値が判明</h3>
-<p>先ほど、User 型のフィールドにどんな値が設定されるのかわからなかった旨を書きましたが、これでユーザ ID が入るのだとわかりました。</p>
-<p>ユーザ ID はテキストですが、User 型にすることでユーザ ID の存在確認まで行われます。</p>
+<p>先ほど、User 型のフィールドにどんな値が入るかわからなかった旨を書きましたが、これでユーザ ID が入るのだとわかりました。</p>
+<p>ユーザ ID はテキストですが、Text 型ではなく User 型にすることで ID の存在確認まで行われます。</p>
 <h3 id="%E3%83%AC%E3%82%B3%E3%83%BC%E3%83%89%E8%BF%BD%E5%8A%A0%E3%81%AE%E3%83%AB%E3%83%BC%E3%83%AB">レコード追加のルール</h3>
 <p>レコード追加時用の「CREATE ACTION」は作ろうとしているレコードのルールであって、そのレコードはまだ存在しないため、<code>@collection.tasks.user</code> を使うと正しいルールになりません。<br>
 そうすると、自分以外のユーザの ID を使ってタスクを追加できてしまいます。</p>
-<p><code>@request.data.user</code> は API で追加しようとしているレコードデータのうちの user フィールドの値を表すので、それを使うことで API を実行したユーザの ID だけに制限することができました。</p>
+<p><code>@request.data.user</code> は API で追加しようとしているレコードデータのうちの user フィールドの値を表すので、それを使うことで API を実行したユーザの ID に限ることができました。</p>
 <h1 id="CRUD">CRUD</h1>
 <p>ここまでで大事な部分は概ね終わっています。<br>
 ここからは、操作の仕方や実行結果を見ていきます。</p>
@@ -143,39 +145,40 @@ final record = await client.records.create(
 );  
   
 print(record.id);
-  // fqCY05ud8RDoPBl  
+ // fqCY05ud8RDoPBl  
 print(record.created);
-  // 2022-08-13 09:06:13.491  
-print(record.data);  // {task: タスク1, user: 3DKCttAcBXBaoE4}  
+ // 2022-08-13 09:06:13.491  
+print(record.data); // {task: タスク1, user: 3DKCttAcBXBaoE4}  
 </code></pre>
-<p>追加したレコードの情報が返ってくるので便利です。</p>
+<p>追加したレコードの情報が返ってくるのが便利です。</p>
 <h3 id="%E5%88%A5%E3%81%AE%E3%83%A6%E3%83%BC%E3%82%B6%E3%81%AE%20ID%20%E3%81%A7%E8%BF%BD%E5%8A%A0">別のユーザの ID で追加</h3>
 <pre><code class="language-dart">body: {'task': 'タスク1', 'user': 'zCDIdLMnCtarKMt'},  
 </code></pre>
-<p>先ほど設定した API ルールに反するので阻止され、例外が発生します。</p>
+<p>先ほど設定した API ルールに反するので、阻止されて例外（<code>ClientException</code>）が発生します。</p>
 <pre><code>ClientException: {url: http://127.0.0.1:8090/api/collections/tasks/records, isAbort: false, statusCode: 400, response: {code: 400, message: Failed to create record., data: {}}, originalError: null}  
 </code></pre>
 <p>ルール違反であることがもう少しわかりやすいメッセージだといいのですが…。<br>
 ステータスコードは <code>400</code>（Bad Request）です。</p>
 <h3 id="%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E3%83%A6%E3%83%BC%E3%82%B6%20ID%20%E3%81%A7%E8%BF%BD%E5%8A%A0">存在しないユーザ ID で追加</h3>
 <p>User 型にしていることでチェックが効くようで、例外が発生します。<br>
-ステータスコードは同じ <code>404</code> ですがメッセージが異なります。</p>
+ステータスコードは同じ <code>400</code> ですがメッセージが異なります。</p>
 <pre><code>ClientException: {url: http://127.0.0.1:8090/api/collections/tasks/records, isAbort: false, statusCode: 400, response: {code: 400, message: Something went wrong while processing your request., data: {user: {code: validation_missing_users, message: Failed to fetch all users with the provided ids.}}}, originalError: null}  
 </code></pre>
 <h3 id="%E6%99%82%E5%88%BB">時刻</h3>
-<p>レコードを管理画面で見ると次のようになっています。</p>
+<p>追加したレコードを管理画面で見ると次のようになっています。</p>
 <p><img src="https://mxfyaoprdbheocgwuqnv.supabase.co/storage/v1/object/public/blog-images/288c84779bf72df5fdfdb514.jpg" alt="レコード一覧"></p>
-<p><code>created</code> 等の日時は UTC になっているのがわかります。<br>
-しかし先ほどのレコード追加時の結果に含まれている String 型の <code>created</code> では UTC の表記になっていません。</p>
-<p>その日時テキストを使うなら、例えば次のようにしないといけません。</p>
+<p><code>created</code> 等の日時は UTC になっているのがわかります。</p>
+<p>UTC は ISO 8601 の形式に従うならば <code>2022-08-13T18:06:13.491Z</code> などの表記になりますが、先ほどのレコード追加結果に含まれていた <code>created</code> では <code>2022-08-13 06:13.491</code> という文字列でした。</p>
+<p>このままでは Dart で UTC として扱われなくて使えないので、面倒な変換が必要になります。<br>
+下記は一例です。</p>
 <pre><code class="language-dart">final utcString = '${DateTime.parse(record.created).toIso8601String()}Z';  
 final createdAt = DateTime.parse(utcString).toLocal();  
 print(createdAt);  
 </code></pre>
-<p>UTC のはずなのにそうなっていないのは不具合と呼べる動作です。<br>
-PocketBase 自体か Dart のパッケージかどちらかで修正してもらわないと実用できません。</p>
+<p>UTC の時刻が UTC として表現されていないのは不具合と呼べる動作です。<br>
+PocketBase 自体か Dart のパッケージかどこかの原因箇所を修正してもらわないと実用できません。<br>
+重大なのでそのうち修正されるでしょう。</p>
 <h2 id="%E3%83%AC%E3%82%B3%E3%83%BC%E3%83%89%E3%82%92%E5%8F%96%E5%BE%97">レコードを取得</h2>
-<p>日時は結構重大ですが、置いておいて CRUD の続きをしましょう。</p>
 <p>レコードの取得は複数のメソッドがあります。</p>
 <ul>
 <li>getOne()
@@ -210,9 +213,9 @@ for (final record in list) {
 <h3 id="getFullList()%20%E3%81%A8%20getList()">getFullList() と getList()</h3>
 <p>返り値の型が異なります。<br>
 <code>getFullList()</code> は <code>List&lt;RecordModel&gt;</code> で、<code>getList()</code> は <code>ResultList&lt;RecordModel&gt;</code> です。</p>
-<p>異なる理由は、後者では pagination のためのページの情報などを含んでいるからだと思います。</p>
+<p>異なっている理由は、後者では pagination のための情報などを含んでいるからだと思います。</p>
 <h3 id="%E5%88%A5%E3%81%AE%E3%83%A6%E3%83%BC%E3%82%B6%E3%81%A7%E5%8F%96%E5%BE%97">別のユーザで取得</h3>
-<p>最初にユーザを二つ作ったので、レコードを追加したユーザとは異なるもう一人でサインインして取得してみると、空のリストになっていました。<br>
+<p>レコードを追加したユーザとは異なるもう一人でサインインして取得してみると、空のリストになっていました。<br>
 ルールがフィルタとして機能するという Supabase と同様の仕組みになっていると捉えると、例外が発生せずに空が返ってくるのは理解できます。</p>
 <p>次に ID を指定して一件を取得してみます。</p>
 <pre><code class="language-dart">final record = await client.records.getOne('tasks', 'fqCY05ud8RDoPBl');  
@@ -235,13 +238,13 @@ for (final record in list) {
 </code></pre>
 <p>削除では返り値はありません。<br>
 成否は例外の有無で判断することになりそうです。</p>
-<p>別ユーザで実行したときはやはり一件取得や更新のときと同様でした。</p>
+<p>別ユーザで実行したときはやはり一件取得や更新のときと同様の例外でした。</p>
 <h1 id="%E5%AE%9F%E7%94%A8">実用</h1>
-<p>ごく基礎的な操作しかしていませんが、これで感覚はつかめました。<br>
+<p>ごく基本的な操作しかしていませんが、これで感覚はつかめました。<br>
 単純な ToDo アプリは tasks コレクションを使ってもう作れます。</p>
 <p>あとはリレーションを利用するケースを確認しておきたいところですが、今回はここまでにします。</p>
-<p>実用は…、個人的にはもう少し先です。<br>
-大勢が試してフィードバックが出て改善された頃がいいですが、気になるところが減ったら個人開発では使ってもいいと思いました。</p>
+<p>実用は…、個人的にはもう少し先です…。<br>
+大勢が試してフィードバックが出て改善された頃がいいですが、気になるところが減ってきた時点で個人開発では使い始めてもいいと思いました。</p>
 <h2 id="PocketBase%20vs%20Supabase">PocketBase vs Supabase</h2>
 <p>費用面を無視できるなら Supabase を選びます。<br>
 PocketBase は自分でサーバを用意して運用しないといけないので、その費用と手間を考えるとどっこいどっこいかもしれません。</p>
@@ -260,9 +263,19 @@ PocketBase は自分でサーバを用意して運用しないといけないの
 </ul>
 </li>
 </ul>
-<p>PocketBase は SQL らしさが薄いので、SQL が苦手な人は Supabase より馴染みやすい気がします。</p>
+<p>PocketBase は SQL らしさが薄いので、SQL が苦手な人は Supabase より入りやすい気がします。</p>
+<h2 id="%E4%BA%8C%E9%80%9A%E3%82%8A%E3%81%AE%E4%BD%BF%E3%81%84%E6%96%B9">二通りの使い方</h2>
+<ul>
+<li>a) Supabase や Firebase のようにフロントエンドから DB に直接アクセスする</li>
+<li>b) Go でサーバを作るフレームワークとして使い、フロントエンドから Web API でアクセスする</li>
+</ul>
+<p>a は便利ですが、ルールをきっちりと設定して、そのためのテストも書いておかないと危険です。</p>
+<p>PocketBase はサーバレスではなくてサーバのデプロイが必要なので、それなら b のほうにして、サーバでバリデーションをするほうが良い気がします。<br>
+バックエンドに処理をまとめたほうがクライアントがシンプルになるというのもあります。</p>
+<p>でも、a なら仕様を変えたいときにアプリ側だけいじれば済むので、そちらのほうがいい気もします。</p>
+<p>迷うところですが、選択肢が与えられているのは良いことなので、運用方法などを考えながら前向きに迷いましょう。</p>
 <h1 id="%E3%81%BE%E3%81%A8%E3%82%81">まとめ</h1>
-<p>PocketBase は可能性が感じられ、期待できます。<br>
+<p>PocketBase には可能性が感じられ、期待できます。<br>
 こんなに素晴らしいものが OSS として提供されているのはありがたいですね。<br>
 しばらく見守りたいと思います。</p>
 </body></article></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 kaboc</small></footer></div><script src="../res/js/highlight.min.js"></script><script>hljs.highlightAll();</script></body></html>
