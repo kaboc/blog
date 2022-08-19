@@ -120,8 +120,8 @@ GitHub のそのリポジトリでは多少の動きはあるようです。</p>
 <h4 id="%E3%83%84%E3%83%BC%E3%83%AB">ツール</h4>
 <p>package:wasm の <a href="https://pub.dev/packages/wasm" target="_blank" rel="noopener">ドキュメント</a> によると、Wasmer のランタイムを利用しているそうです。<br>
 そのために Rust が用いられるので、開発マシンに入っていなければインストールが必要です。</p><details>  
-<summary>Windows での場合</summary>
-<p>Windows では <code>link.exe</code> が使えるように Visual Studio の Build Tools で 「C++ によるデスクトップ開発」のインストールが必要とのことです。<br>
+<summary>Windows の場合</summary>
+<p>Windows では <code>link.exe</code> が使えるように Visual Studio の Build Tools で 「C++ によるデスクトップ開発」のインストールも必要とのことです。<br>
 Flutter のデスクトップアプリを Windows 上で開発している人はインストール済みだと思います。</p>
 <p>私の場合、それはインストール済みでしたが LLVM / Clang  がなかったので、Visual Studio Installer の「個別のコンポーネント」のところで「C++ Clang-cl」と「Windows 用 C++ Clang コンパイラ」をインストールし、さらに Path を設定しました。</p></details>
 <h4 id="%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%88">プロジェクト</h4>
@@ -153,14 +153,18 @@ export function: int32 fibonacci(int32)
 <h3 id="%E5%88%A9%E7%94%A8">利用</h3>
 <p>Wasm を Dart で利用するのは、もうここまで準備ができていると簡単です。<br>
 型の定義を自分で用意しないといけない FFI より扱いやすいです。</p>
-<pre><code class="language-dart">final inst = mod.builder().build();  
+<pre><code class="language-dart">// この関数を使って実行とかかった時間の出力を行うことにします  
+void run(int Function() func) {  
+  final sw = Stopwatch()..start();  
+  final number = func();  
+  final elapsed = (sw..stop()).elapsedMilliseconds;  
+  print('[$elapsed ms] $number');  
+}  
+</code></pre>
+<pre><code class="language-dart">final mod = WasmModule(data);  
+final inst = mod.builder().build();  
 final fibonacci = inst.lookupFunction('fibonacci');  
-  
-final sw = Stopwatch()..start();  
-final number = fibonacci(45);  
-final elapsed = (sw..stop()).elapsedMilliseconds;  
-  
-print('[$elapsed ms] $number'); // [8111 ms] 1134903170  
+run(() =&gt; fibonacci(45));  
 </code></pre>
 <h2 id="FFI">FFI</h2>
 <p>以前には別の PC で <a href="https://pub.dev/packages/ffigen" target="_blank" rel="noopener">ffigen</a> を使ったのですが、今の自分の PC では何かが不足していて利用できなかったので、型の定義は手動で行いました。</p>
@@ -177,11 +181,7 @@ void main() {
       .lookup&lt;ffi.NativeFunction&lt;FibonacciFunc&gt;&gt;('fibonacci')  
       .asFunction&lt;Fibonacci&gt;();  
   
-  final sw = Stopwatch()..start();  
-  final number = fibonacci(45);  
-  final elapsed = (sw..stop()).elapsedMilliseconds;  
-  
-  print('[$elapsed ms] $number'); // [3944 ms] 1134903170  
+  run(() =&gt; fibonacci(45));  
 }  
 </code></pre>
 <h2 id="Dart">Dart</h2>
@@ -191,11 +191,7 @@ void main() {
 }  
   
 void main() {  
-  final sw = Stopwatch()..start();  
-  final number = fibonacci(45);  
-  final elapsed = (sw..stop()).elapsedMilliseconds;  
-  
-  print('[$elapsed ms] $number'); // [10138 ms] 1134903170  
+  run(() =&gt; fibonacci(45));  
 }  
 </code></pre>
 <h1 id="%E7%B5%90%E6%9E%9C">結果</h1>
