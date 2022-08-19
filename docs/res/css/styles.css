@@ -326,3 +326,14 @@ main .markdown-body blockquote {
   border-left: .45em solid #90b575;
   background-color: #f0f0f0;
 }
+
+main #bottom-social-buttons {
+  margin-top: 30px;
+  text-align: center;
+}
+
+main #bottom-social-buttons > * {
+  margin: 0 6px;
+  padding: 0;
+  text-decoration: none;
+}
