@@ -1,10 +1,10 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Zig + Dart（FFI / Wasm）の可能性 | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220819-01gatw3173"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202208191920"><link rel="stylesheet" href="../res/css/github-markdown.css"><link rel="stylesheet" href="../res/css/obsidian.min.css"><meta name="title" content="Zig + Dart（FFI / Wasm）の可能性 | Kabolog"><meta name="description" content="Dart で他の言語を利用するのは Go で試みたことがあります。 gomobile で作ったライブラリ + Flutter の Platform Channel アプリ開発にgomobileを利用する（Android/iOS/Flutter） - Qiita Go で作ったライブラリ + Dart FFI kaboc/dart-ffi_cgo_ojicha"><meta name="keywords" content="Zig,Dart,FFI"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220819-01gatw3173"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Zig + Dart（FFI / Wasm）の可能性 | Kabolog"><meta property="og:description" content="Dart で他の言語を利用するのは Go で試みたことがあります。 gomobile で作ったライブラリ + Flutter の Platform Channel アプリ開発にgomobileを利用する（Android/iOS/Flutter） - Qiita Go で作ったライブラリ + Dart FFI kaboc/dart-ffi_cgo_ojicha"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Zig + Dart（FFI / Wasm）の可能性 | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220819-01gatw3173"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202208191920"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Zig + Dart（FFI / Wasm）の可能性 | Kabolog"><meta name="description" content="Dart で他の言語を利用するのは Go で試みたことがあります。 gomobile で作ったライブラリ + Flutter の Platform Channel アプリ開発にgomobileを利用する（Android/iOS/Flutter） - Qiita Go で作ったライブラリ + Dart FFI kaboc/dart-ffi_cgo_ojicha"><meta name="keywords" content="Zig,Dart,FFI"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220819-01gatw3173"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Zig + Dart（FFI / Wasm）の可能性 | Kabolog"><meta property="og:description" content="Dart で他の言語を利用するのは Go で試みたことがあります。 gomobile で作ったライブラリ + Flutter の Platform Channel アプリ開発にgomobileを利用する（Android/iOS/Flutter） - Qiita Go で作ったライブラリ + Dart FFI kaboc/dart-ffi_cgo_ojicha"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-8T92E4QR06');
-</script></head><body><div id="blog-view"><header><p><a href="../">Kabolog</a></p></header><div id="view-content"><main><h1 id="post-title">Zig + Dart（FFI / Wasm）の可能性</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Zig">Zig</a></li><li><a href="../?c=Dart%3A%3AFFI">Dart > FFI</a></li></ul><time datetime="2022-08-19T10:58:55.976386Z">2022-08-19</time></section><article class="markdown-body"><body><p>Dart で他の言語を利用するのは Go で試みたことがあります。</p>
+</script></head><body><div id="blog-view"><header><p><a href="../">Kabolog</a></p></header><div id="view-content"><main><h1 id="post-title">Zig + Dart（FFI / Wasm）の可能性</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Zig">Zig</a></li><li><a href="../?c=Dart%3A%3AFFI">Dart > FFI</a></li></ul><time datetime="2022-08-19T10:58:55.976386Z">2022-08-19</time></section><article class="markdown-body"><p>Dart で他の言語を利用するのは Go で試みたことがあります。</p>
 <ul>
 <li>gomobile で作ったライブラリ + Flutter の Platform Channel
 <ul>
@@ -95,7 +95,8 @@ gtag('config', 'G-8T92E4QR06');
 <pre><code class="language-shell">zig build-lib src/main.zig -dynamic --name fibonacci -O ReleaseSmall  
 </code></pre>
 <p>これだけでライブラリが生成されます。<br>
-Windows では DLL です。</p>
+Windows では DLL です。<br>
+これを後で Dart FFI で利用します。</p>
 <h3 id="%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%B5%E3%82%A4%E3%82%BA">ファイルサイズ</h3>
 <p>出来上がった DLL ファイルは 4.5 KB でした。<br>
 <code>-O</code> の最適化のフラグを指定しないと数百 KB になり、動作速度も遅くなります。</p>
@@ -113,13 +114,15 @@ GitHub のそのリポジトリでは多少の動きはあるようです。</p>
 <p>クロスコンパイルと同じ要領で <code>-target wasm32-freestanding</code> を指定するだけです。<br>
 <a href="https://ziglang.org/documentation/master/#Freestanding" target="_blank" rel="noopener">https://ziglang.org/documentation/master/#Freestanding</a></p>
 <p>ファイルサイズは DLL とほぼ同じでした。</p>
+<p>wasm ファイルはプラットフォームが違っても共通なのでクロスコンパイルが不要で、Dart で使うときに分岐しなくていいので扱いやすいです。</p>
 <h1 id="Dart%20%E3%81%A7%E5%88%A9%E7%94%A8">Dart で利用</h1>
+<p>ライブラリと Wasm をそれぞれ Dart で使ってみます。<br>
+作った順序と逆に Wasm のほうから。</p>
 <h2 id="Wasm">Wasm</h2>
-<p>作った順序と逆になりますが Wasm のほうから。</p>
 <h3 id="%E6%BA%96%E5%82%99">準備</h3>
 <h4 id="%E3%83%84%E3%83%BC%E3%83%AB">ツール</h4>
-<p>package:wasm の <a href="https://pub.dev/packages/wasm" target="_blank" rel="noopener">ドキュメント</a> によると、Wasmer のランタイムを利用しているそうです。<br>
-そのために Rust が用いられるので、開発マシンに入っていなければインストールが必要です。</p><details>  
+<p>package:wasm では WebAssembly のランタイムである Wasmer が用いられます。<br>
+そのために Rust が使われるので、開発マシンに入っていなければインストールが必要です。</p><details>  
 <summary>Windows の場合</summary>
 <p>Windows では <code>link.exe</code> が使えるように Visual Studio の Build Tools で 「C++ によるデスクトップ開発」のインストールも必要とのことです。<br>
 Flutter のデスクトップアプリを Windows 上で開発している人はインストール済みだと思います。</p>
@@ -201,4 +204,4 @@ void main() {
 Wasm か Wasmer の限界なのでしょうか。<br>
 扱いやすさでは勝っていただけに残念に思います。<br>
 Dart が苦手とする処理が何かあるなら、そこでは Wasm でも効果的かもしれません。</p>
-</body></article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20220819-01gatw3173&amp;text=Zig%20%2B%20Dart%EF%BC%88FFI%20%2F%20Wasm%EF%BC%89%E3%81%AE%E5%8F%AF%E8%83%BD%E6%80%A7&amp;via=kabochapo&amp;hashtags=Kabolog" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.png" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;" /></a><script type="text/javascript" src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8" async="async"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 kaboc</small></footer></div><script src="../res/js/highlight.min.js"></script><script>hljs.highlightAll();</script></body></html>
+</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20220819-01gatw3173&amp;text=Zig%20%2B%20Dart%EF%BC%88FFI%20%2F%20Wasm%EF%BC%89%E3%81%AE%E5%8F%AF%E8%83%BD%E6%80%A7&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 kaboc</small></footer></div></body></html>
