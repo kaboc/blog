@@ -4,7 +4,7 @@ window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-8T92E4QR06');
-</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Zig + Dart（FFI / Wasm）の可能性</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Zig">Zig</a></li><li><a href="../?c=Dart%3A%3AFFI">Dart > FFI</a></li></ul><time datetime="2022-08-19T10:58:55.976386Z">2022-08-19</time></section><article class="markdown-body"><p>Dart で他の言語を利用するのは Go で試みたことがあります。</p>
+</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Zig + Dart（FFI / Wasm）の可能性</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Zig">Zig</a></li><li><a href="../?c=Dart%3A%3AFFI">Dart > FFI</a></li></ul><time datetime="2022-08-19T10:58:55.976386Z">2022-08-19</time></section><article class="markdown-body"><p>Dart で他の言語を利用するのは Go で試みたことがあります。</p>
 <ul>
 <li>gomobile で作ったライブラリ + Flutter の Platform Channel
 <ul>
@@ -167,7 +167,7 @@ void run(int Function() func) {
 <pre><code class="language-dart">final mod = WasmModule(data);  
 final inst = mod.builder().build();  
 final fibonacci = inst.lookupFunction('fibonacci');  
-run(() =&gt; fibonacci(45));  
+run(() =&gt; fibonacci(45)); // [8111 ms] 113490317  
 </code></pre>
 <h2 id="FFI">FFI</h2>
 <p>以前には別の PC で <a href="https://pub.dev/packages/ffigen" target="_blank" rel="noopener">ffigen</a> を使ったのですが、今の自分の PC では何かが不足していて利用できなかったので、型の定義は手動で行いました。</p>
@@ -184,7 +184,7 @@ void main() {
       .lookup&lt;ffi.NativeFunction&lt;FibonacciFunc&gt;&gt;('fibonacci')  
       .asFunction&lt;Fibonacci&gt;();  
   
-  run(() =&gt; fibonacci(45));  
+  run(() =&gt; fibonacci(45)); // [3944 ms] 1134903170  
 }  
 </code></pre>
 <h2 id="Dart">Dart</h2>
@@ -194,7 +194,7 @@ void main() {
 }  
   
 void main() {  
-  run(() =&gt; fibonacci(45));  
+  run(() =&gt; fibonacci(45)); // [10138 ms] 1134903170  
 }  
 </code></pre>
 <h1 id="%E7%B5%90%E6%9E%9C">結果</h1>
@@ -204,4 +204,4 @@ void main() {
 Wasm か Wasmer の限界なのでしょうか。<br>
 扱いやすさでは勝っていただけに残念に思います。<br>
 Dart が苦手とする処理が何かあるなら、そこでは Wasm でも効果的かもしれません。</p>
-</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20220819-01gatw3173&amp;text=Zig%20%2B%20Dart%EF%BC%88FFI%20%2F%20Wasm%EF%BC%89%E3%81%AE%E5%8F%AF%E8%83%BD%E6%80%A7&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
+</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20220819-01gatw3173&amp;text=Zig%20%2B%20Dart%EF%BC%88FFI%20%2F%20Wasm%EF%BC%89%E3%81%AE%E5%8F%AF%E8%83%BD%E6%80%A7%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
