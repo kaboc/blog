@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title><T> と <T extends Object?> と <T extends Object> | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221024-01gg4h905n"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202208262055"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="<T> と <T extends Object?> と <T extends Object> | Kabolog"><meta name="description" content="ジェネリック型を単純に <T> にばかりしないほうがいいと思ったのでメモします。 Foo<T> ジェネリックなクラスを使うときに型を明示していなくてランタイムにも決まらない場合には dynamic になります。 void main() { final v = Foo().value; // dynamic } class Foo<T> { T? value;"><meta name="keywords" content="Dart,小ネタ"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221024-01gg4h905n"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="<T> と <T extends Object?> と <T extends Object> | Kabolog"><meta property="og:description" content="ジェネリック型を単純に <T> にばかりしないほうがいいと思ったのでメモします。 Foo<T> ジェネリックなクラスを使うときに型を明示していなくてランタイムにも決まらない場合には dynamic になります。 void main() { final v = Foo().value; // dynamic } class Foo<T> { T? value;"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-8T92E4QR06');
+</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">&lt;T&gt; と &lt;T extends Object?&gt; と &lt;T extends Object&gt;</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E5%B0%8F%E3%83%8D%E3%82%BF">Dart > 小ネタ</a></li></ul><time datetime="2022-10-24T08:20:50.464469Z">2022-10-24</time></section><article class="markdown-body"><p>ジェネリック型を単純に <code>&lt;T&gt;</code> にばかりしないほうがいいと思ったのでメモします。</p>
+<h2 id="Foo%26lt%3BT%26gt%3B">Foo&lt;T&gt;</h2>
+<p>ジェネリックなクラスを使うときに型を明示していなくてランタイムにも決まらない場合には <code>dynamic</code> になります。</p>
+<pre><code class="language-dart">void main() {  
+  final v = Foo().value; // dynamic  
+}  
+  
+class Foo&lt;T&gt; {  
+  T? value;  
+}  
+</code></pre>
+<h3 id="dynamic%20%E3%81%AE%E6%89%B1%E3%81%84%E3%81%AB%E3%81%8F%E3%81%95">dynamic の扱いにくさ</h3>
+<p>analysis_options.yaml で strong-mode の <code>implicit-dynamic: false</code> の指定をしていると、<code>dynamic</code> な変数を使うときに明示的に何らかの型に cast しないとエラーになって扱いにくいです。</p>
+<pre><code class="language-dart">// Missing parameter type for 'v'.  
+&lt;dynamic&gt;['a', 1].map((v) =&gt; print('$v')).toList();  
+</code></pre>
+<p>null safety が導入された Dart 2.12 以降では <code>Object?</code>（non-null だと決まっているなら <code>Object</code>）で代用すると避けることができます。</p>
+<pre><code class="language-dart">// vは自動的にObject型だと判断されてエラーにならない  
+['a', 1].map((v) =&gt; print('$v')).toList();  
+</code></pre>
+<p>ただ <code>implicit-dynamic: false</code> の設定をしていない場合には <code>dynamic</code> でもそんなに困らないのかも知れません。</p>
+<p>また、<a href="https://github.com/dart-lang/sdk/issues/48650#issuecomment-1076808461" target="_blank" rel="noopener">strong-mode は今はもう deprecated</a> になっていて、下記のように <a href="https://dart.dev/guides/language/analysis-options#enabling-additional-type-checks" target="_blank" rel="noopener"><code>strict-inference: true</code> などを使ったほうがいい</a> そうですが、そちらはどうも緩くて警告しか出なかったり何の警告もなかったりするので、上の map の例でもエラーになりません。</p>
+<pre><code class="language-yaml">analyzer:  
+  language:  
+    strict-casts: true  
+    strict-inference: true  
+    strict-raw-types: true  
+</code></pre>
+<p>どちらにしても、型がまだ無いという <code>dynamic</code> の状態は気持ち悪く感じます。</p>
+<h2 id="Foo%26lt%3BT%20extends%20Object%3F%26gt%3B">Foo&lt;T extends Object?&gt;</h2>
+<p><code>T extends Object?</code> に替えると、<code>T</code> の具体的な型が示されていないときに <code>dynamic</code> になるのを避けることができます。</p>
+<pre><code class="language-dart">void main() {  
+  final v = Foo().value; // Object?  
+}  
+  
+class Foo&lt;T extends Object?&gt; {  
+  T? value;  
+}  
+</code></pre>
+<h2 id="Foo%26lt%3BT%20extends%20Object%26gt%3B">Foo&lt;T extends Object&gt;</h2>
+<p>では、<code>?</code> のない <code>T extends Object</code> は何なのでしょうか。</p>
+<pre><code class="language-dart">void main() {  
+  final foo = Foo(null); // 'Null' doesn't conform to the bound 'Object' of the type parameter 'T'.  
+}  
+  
+class Foo&lt;T extends Object&gt; {  
+  const Foo(this.value);  
+  
+  final T value;  
+}  
+</code></pre>
+<p><code>null</code> になる可能性が排除されました。</p>
+<p>その理由は Dart 2.12 以降の <code>Object</code> 型に <code>Null</code> 型が含まれなくなったことを理解していればわかると思います。<br>
+把握していない方は次の記事を参考にしてみてください。</p>
+<ul>
+<li><a href="https://qiita.com/kabochapo/items/fbca2b2972546eeadcfa#object-%E3%81%A8%E3%81%AE%E6%AF%94%E8%BC%83" target="_blank" rel="noopener">Dartの型の理解しておきたいあれこれ（Null safety編） - Qiita</a></li>
+</ul>
+<h2 id="%E3%81%BE%E3%81%A0%E3%81%BE%E3%81%A0%E5%A5%A5%E3%81%AF%E6%B7%B1%E3%81%84">まだまだ奥は深い</h2>
+<p>上記はわかっていれば難しくもない話です。<br>
+でもジェネリクスの nullability は結構ややこしいです。</p>
+<pre><code class="language-dart">class Foo&lt;T extends Object?&gt; {  
+  const Foo([this.value]);  
+    
+  final T? value;  
+}  
+</code></pre>
+<p>ここで <code>T</code> は <code>extends Object?</code> で <code>null</code> も含まれるので <code>T?</code> に近いものになっているイメージを持つのですが、コンストラクタのオプショナルな引数のためには <code>final T value</code> ではなく <code>final T? value</code> としなければなりません。</p>
+<p>その一方で、仮引数や戻り値の型ではそうでもありません。<br>
+しかも次のようにますますややこしいです。</p>
+<pre><code class="language-dart">class Foo&lt;T extends Object?&gt; {  
+  Foo(T value) : _value = value; // T?はダメ（a）  
+  
+  T _value;  
+  
+  T get value =&gt; _value; // TでもT?でもいい（b）  
+  
+  void updateValue1(T value) { // T?はダメ（c）  
+    _value = value;  
+  }  
+  
+  void updateValue2(T value) { // TでもT?でもいい（d）  
+    if (value != null) {  
+      _value = value;  
+    }  
+  }  
+</code></pre>
+<p>b と d では <code>T</code> と書くことも <code>T?</code> と書くこともできます。<br>
+<code>T</code> が <code>null</code> を含んでいるので <code>T?</code> と書く意味はなさそうですが、明確にするためにあえて <code>T?</code> としてもいいかもしれません。</p>
+<p>a と c についても、たった今書いた「<code>T</code> が <code>null</code> を含んでいるので」という理屈からすると <code>T?</code> にできそうに思えますが、_value の型を <code>T</code> にしているので value を <code>T?</code> にすると <code>_value = value</code> がエラーになります。<br>
+トリッキーですね。</p>
+<p>このあたりの奥深さを以前につぶやいていたので最後に貼っておきます。<br>
+（スレッドになっていてツイートがもう一つありますが、その二つ目はちょっと怪しくて見直しが必要かもしれません。）</p><blockquote class="twitter-tweet"><p lang="ja" dir="ltr">Dartのジェネリクスの型で時々混乱するのでメモ。 <a href="https://t.co/lL7PDMGBGJ" target="_blank" rel="noopener">pic.twitter.com/lL7PDMGBGJ</a></p>— Kabo (@kabochapo) <a href="https://twitter.com/kabochapo/status/1537271819346276352?ref_src=twsrc%5Etfw" target="_blank" rel="noopener">June 16, 2022</a></blockquote> <script async="" src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20221024-01gg4h905n&amp;text=%3CT%3E%20%E3%81%A8%20%3CT%20extends%20Object%3F%3E%20%E3%81%A8%20%3CT%20extends%20Object%3E%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
