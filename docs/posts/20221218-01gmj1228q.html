@@ -1,0 +1,105 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartの非同期処理の理解を深める（キュー編） | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221218-01gmj1228q"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dartの非同期処理の理解を深める（キュー編） | Kabolog"><meta name="description" content="Advent Calendar の時期なので、PC 上にあったメモを記事にすることにしました。 次のあたりがわかるようになる記事です。 時々出てくる microtask って何のこと？ Future、Future.value、Future.sync は何が違うの？ Dart の非同期処理 Dart はシングルスレッドの言語で、自分で Isolate（アイソレ"><meta name="keywords" content="Dart,非同期処理"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221218-01gmj1228q"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartの非同期処理の理解を深める（キュー編） | Kabolog"><meta property="og:description" content="Advent Calendar の時期なので、PC 上にあったメモを記事にすることにしました。 次のあたりがわかるようになる記事です。 時々出てくる microtask って何のこと？ Future、Future.value、Future.sync は何が違うの？ Dart の非同期処理 Dart はシングルスレッドの言語で、自分で Isolate（アイソレ"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-8T92E4QR06');
+</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Dartの非同期処理の理解を深める（キュー編）</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86">Dart &gt; 非同期処理</a></li></ul><time datetime="2022-12-18T07:09:35.008766Z">2022-12-18</time></section><article class="markdown-body"><p>Advent Calendar の時期なので、PC 上にあったメモを記事にすることにしました。<br>
+次のあたりがわかるようになる記事です。</p>
+<ul>
+<li>時々出てくる microtask って何のこと？</li>
+<li><code>Future</code>、<code>Future.value</code>、<code>Future.sync</code> は何が違うの？</li>
+</ul>
+<h1 id="Dart%20%E3%81%AE%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86">Dart の非同期処理</h1>
+<p>Dart はシングルスレッドの言語で、自分で <a href="https://api.dart.dev/stable/dart-isolate/Isolate-class.html" target="_blank" rel="noopener">Isolate</a>（アイソレット）を追加しなければ main thread（main isolate）のみとなります。</p>
+<p>それでも、何らかの処理を予約してすぐに別の処理を進めたり、様々な処理を行いながらボタンタップ/文字入力などのイベントを受け付けたりすることができます。<br>
+シングルスレッドでそのような非同期処理が可能なのは、<strong>イベントループ</strong> で <strong>キュー</strong> をうまく捌くようになっているからです。</p>
+<h1 id="%E3%82%AD%E3%83%A5%E3%83%BC%E3%81%A8%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%83%AB%E3%83%BC%E3%83%97">キューとイベントループ</h1>
+<h2 id="%E3%82%AD%E3%83%A5%E3%83%BC">キュー</h2>
+<p>処理すべきタスクやイベントはキューに入れられます。<br>
+キューとは FIFO（First In, First Out: 先入れ先出し）の仕組みで、順番待ちの列のことです。<br>
+人気店の行列が先頭にいる人から順に捌かれるように、Dart で非同期に行われるべき処理も列を成して先頭のほうから取り出されて処理されます。</p>
+<h2 id="%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88%E3%83%AB%E3%83%BC%E3%83%97">イベントループ</h2>
+<p>キューから取り出して処理することの繰り返しがイベントループです。<br>
+次々とキューに新たに入ってきてもループしながら取り出してはどんどん捌いていきます。</p>
+<p>しかし通常はうまく捌くものの、別スレッドではないので重い処理で余裕がなくなると main isolate そのものの動作に影響します。<br>
+例えば Flutter で UI のブロック（アニメーションが止まる等）が起こります。</p>
+<p>それを避けるのに isolate が役立ちますが割愛します。<br>
+ここでお伝えしておきたいのは、isolate ごとにイベントループがあることだけです。<br>
+詳細は <a href="https://dart.dev/guides/language/concurrency" target="_blank" rel="noopener">ドキュメント</a> をお読みください。</p>
+<h1 id="%E4%BA%8C%E3%81%A4%E3%81%AE%E3%82%AD%E3%83%A5%E3%83%BC">二つのキュー</h1>
+<p>キューには二種類があります。</p>
+<ul>
+<li>Microtask queue</li>
+<li>Event queue</li>
+</ul>
+<p>優先度の違いだと理解しておけば良いと思います。<br>
+microtask queue は event queue より先に処理されます。<br>
+もし microtask がたくさんあって詰まっていれば event queue は捌かれないままとなります。</p>
+<p><code>Future.microtask</code>、<code>scheduleMicrotask()</code> などで microtask として予約することができますが、特別な理由がある場合を除いて「microtask queue に入れるぞ」と考える必要はありません。<br>
+理由がなければ event queue に入れればいいということになります。</p>
+<h2 id="Future%20%E3%81%AE%E5%90%84%E3%82%B3%E3%83%B3%E3%82%B9%E3%83%88%E3%83%A9%E3%82%AF%E3%82%BF%E3%81%A8%E3%82%AD%E3%83%A5%E3%83%BC%E3%81%AE%E9%96%A2%E4%BF%82">Future の各コンストラクタとキューの関係</h2>
+<ul>
+<li><strong>Future.sync</strong>
+<ul>
+<li>microtask queue に入る</li>
+<li><code>Future.sync(() =&gt; v)</code> は、<code>() =&gt; v</code> を今すぐに実行しつつそこで起こるエラーを捕捉したい場合に使える</li>
+</ul>
+</li>
+<li><strong>Future.value</strong>
+<ul>
+<li>microtask queue に入る</li>
+<li><code>Future.value(v)</code> は <code>Future.sync(() =&gt; v)</code> と同等
+<ul>
+<li>ソースコードによれば確かに同等に見える</li>
+<li>でも次の二つをその順に実行しても後者のほうが先になった（誰か理由を教えて）
+<ul>
+<li><code>Future.microtask(() =&gt; Future.value(v))</code></li>
+<li><code>Future.microtask(() =&gt; Future.sync(() =&gt; v))</code>
+<ul>
+<li>こちらはなぜか <code>Future.microtask(() =&gt; v)</code> と同程度に早く実行される</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Future.error</strong>
+<ul>
+<li>microtask queue に入る</li>
+<li><code>Future.value(v)</code> のエラー版と捉えることができる</li>
+</ul>
+</li>
+<li><strong>Future.microtask</strong>
+<ul>
+<li>microtask queue に入る</li>
+<li><code>Future.microtask(() =&gt; v)</code> は <code>scheduleMicrotask(() =&gt; v)</code> と同等</li>
+</ul>
+</li>
+<li><strong>Future.delayed</strong>
+<ul>
+<li>event queue に入る</li>
+<li><code>Future.delayed(Duration.zero, () =&gt; v)</code> は <code>Timer.run(() =&gt; v)</code> と同等</li>
+</ul>
+</li>
+<li><strong>Future</strong>
+<ul>
+<li>event queue に入る</li>
+<li><code>Future(() =&gt; v)</code> は <code>Future.delayed(Duration.zero, () =&gt; v)</code> と同等</li>
+</ul>
+</li>
+</ul>
+<p><code>then((v) =&gt; ...)</code> も場合によってキューが絡みます。<br>
+この <code>(v) =&gt; ...</code> は、Future が終わったときにはキューに入らずにすぐに実行されますが、Future が既に完了していれば microtask queue に入ります。</p>
+<hr>
+<p>ちなみに Flutter の <code>WidgetsBinding.instance.addPostFrameCallback()</code> も遅延させるのに使われますが、フレームワークの動作を利用したものなので、上記のキューとは別です。</p>
+<h1 id="%E5%8F%82%E8%80%83%E8%B3%87%E6%96%99">参考資料</h1>
+<ul>
+<li><a href="https://web.archive.org/web/20170704074724/https://webdev.dartlang.org/articles/performance/event-loop" target="_blank" rel="noopener">The Event Loop and Dart | webdev.dartlang.org</a>（アーカイブ）</li>
+<li><a href="https://www.reddit.com/r/dartlang/comments/pmdkzh/serious_future_vs_futurevalue_vs_futuresync_vs/" target="_blank" rel="noopener">[SERIOUS] Future() vs Future.value() vs Future.sync() vs Future.microtask() : dartlang</a></li>
+<li><a href="https://github.com/dart-lang/sdk/issues/48104#issuecomment-1008732795" target="_blank" rel="noopener">Future(computation) constructor slow in javascript (by 1000 times slower than Future.value()) · Issue #48104 · dart-lang/sdk</a></li>
+<li><a href="https://medium.com/dartlang/dart-asynchronous-programming-isolates-and-event-loops-bffc3e296a6a" target="_blank" rel="noopener">Dart asynchronous programming: Isolates and event loops | by Kathy Walrath | Dart | Medium</a></li>
+</ul>
+</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20221218-01gmj1228q&amp;text=Dart%E3%81%AE%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86%E3%81%AE%E7%90%86%E8%A7%A3%E3%82%92%E6%B7%B1%E3%82%81%E3%82%8B%EF%BC%88%E3%82%AD%E3%83%A5%E3%83%BC%E7%B7%A8%EF%BC%89%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
