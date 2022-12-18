@@ -312,9 +312,8 @@ main .markdown-body h6 {
 
 main .markdown-body h1 {
   font-size: 1.8em;
-  padding: .3em .1em;
-  background-color: #eaeaea;
-  border-bottom: 2px solid #e2e2e2;
+  border-bottom-width: 6px;
+  border-bottom-style: double;
 }
 
 main .markdown-body p {
