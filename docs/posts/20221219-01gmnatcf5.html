@@ -1,0 +1,162 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartの非同期処理の理解を深める（エラーハンドリング編） | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221219-01gmnatcf5"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dartの非同期処理の理解を深める（エラーハンドリング編） | Kabolog"><meta name="description" content="Dart Advent Calendar 2022 の 19 日目の記事です。 昨日の記事： Dartの非同期処理の理解を深める（キュー編） はじめに Dart でのプログラミングでは非同期処理が付き物で、エラーの対策も付きまといます。 そんな重要なエラーハンドリングにおいて頭に入れておきたい注意点についてまとめます。 ※アプリでの状態管理と絡むハンドリング"><meta name="keywords" content="Dart,非同期処理"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221219-01gmnatcf5"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartの非同期処理の理解を深める（エラーハンドリング編） | Kabolog"><meta property="og:description" content="Dart Advent Calendar 2022 の 19 日目の記事です。 昨日の記事： Dartの非同期処理の理解を深める（キュー編） はじめに Dart でのプログラミングでは非同期処理が付き物で、エラーの対策も付きまといます。 そんな重要なエラーハンドリングにおいて頭に入れておきたい注意点についてまとめます。 ※アプリでの状態管理と絡むハンドリング"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-8T92E4QR06');
+</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Dartの非同期処理の理解を深める（エラーハンドリング編）</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86">Dart &gt; 非同期処理</a></li></ul><time datetime="2022-12-19T13:57:52.112038Z">2022-12-19</time></section><article class="markdown-body"><p><a href="https://qiita.com/advent-calendar/2022/dart" target="_blank" rel="noopener">Dart Advent Calendar 2022</a> の 19 日目の記事です。</p>
+<p>昨日の記事：</p>
+<ul>
+<li><a href="https://blog.kaboc.cc/posts/20221218-01gmj1228q" target="_blank" rel="noopener">Dartの非同期処理の理解を深める（キュー編）</a></li>
+</ul>
+<h1 id="%E3%81%AF%E3%81%98%E3%82%81%E3%81%AB">はじめに</h1>
+<p>Dart でのプログラミングでは非同期処理が付き物で、エラーの対策も付きまといます。<br>
+そんな重要なエラーハンドリングにおいて頭に入れておきたい注意点についてまとめます。</p>
+<p>※アプリでの状態管理と絡むハンドリング方法の話ではありません。<br>
+※前半はありふれた話で退屈かもしれません。</p>
+<h1 id="try-catch%20%E3%81%A7%E3%81%AF%20await%20%E3%81%97%E3%81%AA%E3%81%84%E3%81%A8%E6%8D%95%E6%8D%89%E3%81%A7%E3%81%8D%E3%81%AA%E3%81%84">try-catch では await しないと捕捉できない</h1>
+<p><code>Future&lt;List&lt;Item&gt;&gt;</code> を返す <code>fetchItem()</code> を実行して結果を返す <code>fetch()</code> があるとします。</p>
+<pre><code class="language-dart">Future&lt;List&lt;Item&gt;&gt; fetch() async {  
+  try {  
+    return fetchItems(); // 捕捉漏れ  
+  } on Exception {  
+    return [];  
+  }  
+}  
+</code></pre>
+<p><code>fetchItems()</code> から返る Future を <code>fetch()</code> からもそのまま返すときには <code>return await fetchItems()</code> とせずに <code>await</code> を省略して書くことが多いと思います。<br>
+<a href="https://dart-lang.github.io/linter/lints/unnecessary_await_in_return.html" target="_blank" rel="noopener">unnecessary_await_in_return</a> の lint ルールを有効にしていると、await が付いていれば警告されます。</p>
+<p>しかし、try のブロック内で省略するとルールを有効にしていても警告が出ず、さらに <code>fetchItems()</code> でエラーが起こっても捕捉されません。</p>
+<p>うっかり <code>await</code> を忘れるだけで捕捉漏れが起きてしまうので怖いですね。<br>
+付け忘れに気づきやすくする lint ルールは今のところは知る限りでは存在しません。</p>
+<h2 id="onError()%E3%81%AA%E3%82%89await%E3%81%AE%E6%9C%89%E7%84%A1%E3%81%AB%E5%B7%A6%E5%8F%B3%E3%81%95%E3%82%8C%E3%81%AA%E3%81%84">onError()ならawaitの有無に左右されない</h2>
+<p>try で await し忘れることで起こる問題は <a href="https://api.flutter.dev/flutter/dart-async/FutureExtensions/onError.html" target="_blank" rel="noopener">onError()</a> を使うと避けることができます。</p>
+<pre><code class="language-dart">Future&lt;List&lt;Item&gt;&gt; fetch() {  
+  return fetchItems().onError((e, s) =&gt; []);  
+}  
+</code></pre>
+<p><code>onError()</code> は、型が曖昧な <a href="https://api.flutter.dev/flutter/dart-async/Future/catchError.html" target="_blank" rel="noopener">catchError()</a> の改善版として <a href="https://github.com/dart-lang/sdk/commit/726904ac17c13d1d0f06536177d62084cc8f308e" target="_blank" rel="noopener">Dart 2.12 で追加</a> された extension method（<a href="https://api.flutter.dev/flutter/dart-async/FutureExtensions.html" target="_blank" rel="noopener">FutureExtensions</a> のメソッド）で、中身はほとんど <code>catchError()</code> と同じです。</p>
+<p>この例では try-catch より簡潔になりましたが、Exception の種類ごとに分岐するなら if などを使って記述がかえって長くなるかもしれません。<br>
+それでも <code>await</code> を忘れるミスを防げるので安全面で良いと思います。</p>
+<h1 id="try-catch%20%E3%81%A7%E3%81%AE%20on%20%E3%81%AE%E7%9C%81%E7%95%A5%E3%82%92%E9%98%B2%E3%81%90%20lint%20%E3%83%AB%E3%83%BC%E3%83%AB">try-catch での on の省略を防ぐ lint ルール</h1>
+<p>catch のところで on を省略するとあらゆるものを捕捉できます。<br>
+しかし <a href="https://dart.dev/guides/language/effective-dart/usage#avoid-catches-without-on-clauses" target="_blank" rel="noopener">Effective Dart で非推奨</a> となっていて、省略を防ぐ <a href="https://dart-lang.github.io/linter/lints/avoid_catches_without_on_clauses.html" target="_blank" rel="noopener">avoid_catches_without_on_clauses</a> という lint ルールもあります。</p><details>  
+<summary>推奨されない理由（クリックで開く）</summary>
+<p>そのルールのページでは次のように説明されています。</p>
+<blockquote>
+<p>Using catch clauses without on clauses make your code prone to encountering unexpected errors that won't be thrown (and thus will go unnoticed).</p>
+<p>意訳： on 節なしで catch 節を使うと、throw されない予期せぬエラーに遭遇しやすくなって気づかないままになります。</p>
+</blockquote>
+<p>とてもわかりにくいです。<br>
+on を省略して Exception 以外も捕捉すれば気づきやすくなりそうなのに、なぜ？</p>
+<p><a href="https://dart.dev/guides/language/effective-dart/usage#avoid-catches-without-on-clauses" target="_blank" rel="noopener">Effective Dart の説明</a> も読んでみます。</p>
+<blockquote>
+<p>Do you want any <code>assert()</code> statements inside that code to effectively vanish since you’re catching the thrown <code>AssertionErrors</code>?</p>
+<p>意訳： throw される <code>AssertionError</code> を捕捉することでコード内の <code>assert()</code> が実質的に見えなくなってしまうのがいいのでしょうか？（反語的）</p>
+</blockquote>
+<p><code>assert()</code> のように <code>throw</code> のキーワードを使わずに発生するエラーのことを「throw されない予期せぬエラー」と表現しているのでしょうか…。<br>
+「thrown AssertionErrors」とも書かれていて矛盾している気がしますが、自分で頭の中で補って次のように理解しました。</p>
+<blockquote>
+<p>自分の理解：</p>
+<p>API を作った人が意図的に throw したものもそうでないものも全部捕捉して自分で揉み消すことができ、気づきにくくなってしまう。<br>
+（捕捉しなければ、エラーが出力されたりプログラムが止まったりして気づけるのに。）</p>
+</blockquote>
+<p>--- 推奨されない理由はここまで ---</p></details>
+<p><code>avoid_catches_without_on_clauses</code> は lints や flutter_lints のパッケージに含まれていませんが、私は Effective Dart に従って自分で有効にしています。<br>
+今後も有効のままにするかどうかはわからなくて、下記がその理由です。</p>
+<h2 id="onError()%E3%81%AF%E6%8D%95%E6%8D%89%E6%BC%8F%E3%82%8C%E3%81%8C%E3%81%AA%E3%81%84%EF%BC%88%E3%81%A8%E6%80%9D%E3%81%A3%E3%81%A6%E3%81%84%E3%81%9F%EF%BC%89">onError()は捕捉漏れがない（と思っていた）</h2>
+<p>上記の lint ルールや Effective Dart の説明を読むと、揉み消すのが悪いのであって揉み消さなければ良いように思えます。</p>
+<p><a href="https://dart.dev/guides/language/effective-dart/usage#avoid-catches-without-on-clauses" target="_blank" rel="noopener">Effective Dart</a> にはこうも書かれています。</p>
+<blockquote>
+<p>In rare cases, you may wish to catch any runtime error. This is usually in framework or low-level code that tries to insulate arbitrary application code from causing problems.</p>
+<p>意訳： 稀に、どんなランタイムエラーも捕捉したいことがあります。通常は、フレームワークや低レベルのコードで任意のアプリケーションコードが問題を起こさないようにしようとする部分です。</p>
+</blockquote>
+<p>「in framework or low-level code」となっていますが、パッケージも当てはまると思います。<br>
+例えば Riverpod の <a href="https://pub.dev/documentation/riverpod/latest/riverpod/AsyncValue/guard.html#source" target="_blank" rel="noopener">AsyncValue.guard()</a> でも on は省略されています。</p>
+<p>そのような場合、try-catch でもいいのですが、代わりに <code>onError()</code> が使えそうです。<br>
+そうすると await し忘れを防ぎつつ全てを捕捉することができます。</p>
+<p><code>then()</code> を組み合わせて「成功時は結果を加工、エラー時は null」のようなことも可能です。</p>
+<pre><code class="language-dart">Future&lt;User?&gt; fetchUser() {  
+  return fetchProfile()  
+      .then&lt;User?&gt;(User.fromProfile)  
+      .onError((e, s) =&gt; null);  
+}  
+</code></pre>
+<h1 id="onError()%20%E3%81%AB%E3%82%82%E7%A9%B4%E3%81%8C%E3%81%82%E3%81%A3%E3%81%9F">onError() にも穴があった</h1>
+<p><code>onError()</code> のほうが万能だと思うようになって活用していたのですが、コールバックが呼ばれない場合があることに先月気づきました。<br>
+実はこれが記事を書くことにしたきっかけです。</p>
+<pre><code class="language-dart">Future&lt;void&gt; main() async {  
+  final result = await calcOrThrow(-10).onError((e, s) =&gt; 0);  
+  ...  
+}  
+  
+Future&lt;int&gt; calcOrThrow(int value) {  
+  if (value &lt; 0) {  
+    throw Exception('ERROR');  
+  }  
+  return calc(value);  
+}  
+  
+Future&lt;int&gt; calc(int value) async {  
+  return value * 2;  
+}  
+</code></pre>
+<h2 id="%E5%8E%9F%E5%9B%A0">原因</h2>
+<p>実際のコードはもっと複雑で、上記程度まで簡略化すると発生条件が見えてました。</p>
+<pre><code class="language-dart">Future&lt;int&gt; calcOrThrow(int value) { // asyncなし  
+</code></pre>
+<p>この部分に async を付けないと起こり、付けると起こらないのです。<br>
+付けていなかったのは、その関数内で await する箇所がなくて付ける意味がないと考えたためです。</p>
+<p>バグではないと思いつつも、ドキュメントの情報と linter が不十分に思えたので報告し、そこでのやり取りで詳細がわかりました。</p>
+<ul>
+<li><code>onError()</code> は Future が返されたときだけ呼ばれる</li>
+<li><code>calcOrThrow()</code> の戻り値の型は <code>Future&lt;int&gt;</code> なので Future が返るように思えるが、同期的に throw しているので Future を返せていない</li>
+</ul>
+<p>エラーを throw するときにも同期/非同期の区別があるとは意識していませんでした。<br>
+非同期に throw するというのは、エラーを Future として返すのと同じ（またはそれに近い仕組み）のようです。</p>
+<h2 id="%E8%A7%A3%E6%B1%BA%E6%96%B9%E6%B3%95">解決方法</h2>
+<p>次のいずれかで解決できます。</p>
+<ul>
+<li>async を付ける</li>
+<li>Future.error() を返す
+<ul>
+<li><code>return Future.error(Exception('ERROR'));</code></li>
+</ul>
+</li>
+</ul>
+<p><a href="https://dart-lang.github.io/linter/lints/discarded_futures.html" target="_blank" rel="noopener">discarded_futures</a> の lint ルールを勧められましたが、そのルールは <code>calcOrThrow()</code> の戻り値の型が <code>Future&lt;int&gt;</code> ではなく <code>int</code> の場合にしか効かないので、防止には役立ちそうにありませんでした。</p>
+<h3 id="%E8%83%8C%E6%99%AF">背景</h3>
+<p><code>async</code> がないことで想定外の動作になるなら付けることを必須にすればいいのに…。<br>
+そう思うかもしれませんが、そうしないのには理由があるそうです。</p>
+<ul>
+<li><code>Future</code> は <code>async</code> / <code>await</code> より古くから Dart にある
+<ul>
+<li><code>async</code> を付けないで Future を返すことができるのはその名残</li>
+</ul>
+</li>
+<li>プリミティブな非同期処理の中には <code>async</code> を付けない書き方が必要なものもある</li>
+<li>そういったことで <code>async</code> を付けない書き方を禁止することはできない</li>
+</ul>
+<p>「穴があった」と書きましたが、正しく Future を返せば防げるところで誤用して起こるだけです。<br>
+誤用を防ぎにくい穴があるのは事実ですが、言語の欠陥ではないと思います。</p>
+<h2 id="%E3%81%93%E3%81%AE%E5%95%8F%E9%A1%8C%E3%81%8C%E3%81%8A%E3%81%93%E3%82%8B%E3%82%B1%E3%83%BC%E3%82%B9">この問題がおこるケース</h2>
+<p>上の例のように「非同期処理を実行して結果をそのまま返すが、実行前に引数を確認して不正であれば throw する」というケースが考えられます。<br>
+例えば、バックエンドの API を呼ぼうとするところで条件を満たさなくて即エラーにする場合です。</p>
+<p>非同期処理を行う関数自体の中で throw するケースでは、その関数には <code>async</code> が付いているはずなので起こらないと思います。</p>
+<h2 id="%E6%94%B9%E5%96%84%E3%81%AE%E5%8F%AF%E8%83%BD%E6%80%A7">改善の可能性</h2>
+<p>報告したことで、非同期処理における同期的な throw の対策となる lint ルールを提案する issue が立てられました。</p>
+<p><a href="https://github.com/dart-lang/linter/issues/3822" target="_blank" rel="noopener">proposal: <code>sync_throw_in_async</code> · Issue #3822 · dart-lang/linter</a></p>
+<p>そこに書かれていることを一部抜粋します。</p>
+<ul>
+<li>これまでにも何度も出てきていた話ではある</li>
+<li>Future を返す関数ではエラーも必ず Future で返すべきだと繰り返し勧めてはいるが、意外なことに非同期関連のドキュメントの中に見当たらないので、そのことも改善したほうがいい</li>
+<li>問題の影響は小さい
+<ul>
+<li>起こったときしか見えなくてエラーとして表れる頻度も低いので問題を認識しにくい</li>
+<li>使い間違えたときに catchError() / onError() でエラーをつかめないだけ</li>
+</ul>
+</li>
+</ul>
+<p>このように重大とは扱われていないものの、改善の余地の認識はありそうです。<br>
+頻繁に扱う非同期処理は安心して使えるほうがいいので、少しでも改善されればいいと思います。</p>
+</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20221219-01gmnatcf5&amp;text=Dart%E3%81%AE%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86%E3%81%AE%E7%90%86%E8%A7%A3%E3%82%92%E6%B7%B1%E3%82%81%E3%82%8B%EF%BC%88%E3%82%A8%E3%83%A9%E3%83%BC%E3%83%8F%E3%83%B3%E3%83%89%E3%83%AA%E3%83%B3%E3%82%B0%E7%B7%A8%EF%BC%89%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
