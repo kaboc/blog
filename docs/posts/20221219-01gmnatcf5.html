@@ -4,7 +4,7 @@ window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-8T92E4QR06');
-</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Dartの非同期処理の理解を深める（エラーハンドリング編）</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86">Dart &gt; 非同期処理</a></li></ul><time datetime="2022-12-19T13:57:52.112038Z">2022-12-19</time></section><article class="markdown-body"><p><a href="https://qiita.com/advent-calendar/2022/dart" target="_blank" rel="noopener">Dart Advent Calendar 2022</a> の 19 日目の記事です。</p>
+</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Dartの非同期処理の理解を深める（エラーハンドリング編）</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86">Dart &gt; 非同期処理</a></li></ul><time datetime="2022-12-19T13:57:52.510674Z">2022-12-19</time></section><article class="markdown-body"><p><a href="https://qiita.com/advent-calendar/2022/dart" target="_blank" rel="noopener">Dart Advent Calendar 2022</a> の 19 日目の記事です。</p>
 <p>昨日の記事：</p>
 <ul>
 <li><a href="https://blog.kaboc.cc/posts/20221218-01gmj1228q" target="_blank" rel="noopener">Dartの非同期処理の理解を深める（キュー編）</a></li>
@@ -72,7 +72,8 @@ on を省略して Exception 以外も捕捉すれば気づきやすくなりそ
 <p>意訳： 稀に、どんなランタイムエラーも捕捉したいことがあります。通常は、フレームワークや低レベルのコードで任意のアプリケーションコードが問題を起こさないようにしようとする部分です。</p>
 </blockquote>
 <p>「in framework or low-level code」となっていますが、パッケージも当てはまると思います。<br>
-例えば Riverpod の <a href="https://pub.dev/documentation/riverpod/latest/riverpod/AsyncValue/guard.html#source" target="_blank" rel="noopener">AsyncValue.guard()</a> でも on は省略されています。</p>
+例えば Riverpod の <a href="https://pub.dev/documentation/riverpod/latest/riverpod/AsyncValue/guard.html#source" target="_blank" rel="noopener">AsyncValue.guard()</a> でも on は省略されています。<br>
+（そこは問題を防ごうとしているのではなくて機能としてどんなエラーもガードするためですが、パッケージなどで必要な理由があるケースの一例です。）</p>
 <p>そのような場合、try-catch でもいいのですが、代わりに <code>onError()</code> が使えそうです。<br>
 そうすると await し忘れを防ぎつつ全てを捕捉することができます。</p>
 <p><code>then()</code> を組み合わせて「成功時は結果を加工、エラー時は null」のようなことも可能です。</p>
@@ -102,7 +103,8 @@ Future&lt;int&gt; calc(int value) async {
 }  
 </code></pre>
 <h2 id="%E5%8E%9F%E5%9B%A0">原因</h2>
-<p>実際のコードはもっと複雑で、上記程度まで簡略化すると発生条件が見えてました。</p>
+<p>実際のコードはもっと複雑で、上記程度まで簡略化すると発生条件が見えてました。<br>
+次の箇所です。</p>
 <pre><code class="language-dart">Future&lt;int&gt; calcOrThrow(int value) { // asyncなし  
 </code></pre>
 <p>この部分に async を付けないと起こり、付けると起こらないのです。<br>
