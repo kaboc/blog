@@ -73,7 +73,7 @@ on を省略して Exception 以外も捕捉すれば気づきやすくなりそ
 </blockquote>
 <p>「in framework or low-level code」となっていますが、パッケージも当てはまると思います。<br>
 例えば Riverpod の <a href="https://pub.dev/documentation/riverpod/latest/riverpod/AsyncValue/guard.html#source" target="_blank" rel="noopener">AsyncValue.guard()</a> でも on は省略されています。<br>
-（そこは問題を防ごうとしているのではなくて機能としてどんなエラーもガードするためですが、パッケージなどで必要な理由があるケースの一例です。）</p>
+（どんなエラーもガードできる機能を提供する理由なので上記の「問題を起こさないように」という理由とは合致しませんが、パッケージなどで on の省略を必要とするケースの一例ではあります。）</p>
 <p>そのような場合、try-catch でもいいのですが、代わりに <code>onError()</code> が使えそうです。<br>
 そうすると await し忘れを防ぎつつ全てを捕捉することができます。</p>
 <p><code>then()</code> を組み合わせて「成功時は結果を加工、エラー時は null」のようなことも可能です。</p>
