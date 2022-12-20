@@ -1,0 +1,288 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartの非同期処理の理解を深める（Tips編） | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../res/images/favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta name="description" content="Dart Advent Calendar 2022 の 19 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 非同期関連のことばかり書いていると飽きるので今日をシリーズ最終回にします。 並行実行 複"><meta name="keywords" content="Dart,非同期処理"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta property="og:description" content="Dart Advent Calendar 2022 の 19 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 非同期関連のことばかり書いていると飽きるので今日をシリーズ最終回にします。 並行実行 複"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-8T92E4QR06');
+</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Dartの非同期処理の理解を深める（Tips編）</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86">Dart &gt; 非同期処理</a></li></ul><time datetime="2022-12-20T14:30:22.087632Z">2022-12-20</time></section><article class="markdown-body"><p><a href="https://qiita.com/advent-calendar/2022/dart" target="_blank" rel="noopener">Dart Advent Calendar 2022</a> の 19 日目の記事です。</p>
+<p>一昨日から非同期処理のシリーズとして書いています。</p>
+<ul>
+<li>18 日目 - <a href="https://blog.kaboc.cc/posts/20221218-01gmj1228q" target="_blank" rel="noopener">Dartの非同期処理の理解を深める（キュー編）</a></li>
+<li>19 日目 - <a href="https://blog.kaboc.cc/posts/20221219-01gmnatcf5" target="_blank" rel="noopener">Dartの非同期処理の理解を深める（エラーハンドリング編）</a></li>
+</ul>
+<p>非同期関連のことばかり書いていると飽きるので今日をシリーズ最終回にします。</p>
+<h1 id="%E4%B8%A6%E8%A1%8C%E5%AE%9F%E8%A1%8C">並行実行</h1>
+<p>複数の非同期処理を一つずつ順番に実行しなくていい場合、並行させるほうが全部が終わるまでの時間を短くすることができます。</p>
+<h2 id="Future.wait()">Future.wait()</h2>
+<p><a href="https://api.dart.dev/stable/dart-async/Future/wait.html" target="_blank" rel="noopener">wait()</a> を使うと、複数の処理を並行して実行して List の形で結果を得ることができます。<br>
+その List は Future になっていて、全部が終わったとき（またはオプション指定によってはエラー時）に解決するので、await して全体の完了を待つことができます。<br>
+List 内の結果の順序は渡された非同期関数と同じです。</p>
+<p>次の例では 1 ～ 3 の数字が付いた関数が逆順に完了してそれぞれの数が返されますが、結果の List は <code>[1, 2, 3]</code> となります。</p>
+<pre><code class="language-dart">Future&lt;int&gt; asynchronousFunc1() {  
+  return Future.delayed(const Duration(milliseconds: 30), () =&gt; 1);  
+}  
+  
+Future&lt;int&gt; asynchronousFunc2() {  
+  return Future.delayed(const Duration(milliseconds: 20), () =&gt; 2);  
+}  
+  
+Future&lt;int&gt; asynchronousFunc3() {  
+  return Future.delayed(const Duration(milliseconds: 10), () =&gt; 3);  
+}  
+  
+Future&lt;void&gt; main() async {  
+  final results = await Future.wait([  
+    asynchronousFunc1(),  
+    asynchronousFunc2(),  
+    asynchronousFunc3(),  
+  ]);  
+  
+  print(results); // [1, 2, 3]  
+}  
+</code></pre>
+<h3 id="%E4%B8%80%E3%81%A4%E3%81%AE%E9%96%A2%E6%95%B0%E3%81%A7%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%8C%E8%B5%B7%E3%81%93%E3%81%A3%E3%81%9F%E5%A0%B4%E5%90%88">一つの関数でエラーが起こった場合</h3>
+<p><code>asynchronousFunc2()</code> で例外を起こしてみましょう。</p>
+<pre><code class="language-dart">Future&lt;int&gt; asynchronousFunc2() async {  
+  print('asynchronousFunc2'); // 実行されたことやタイミングを確認しやすくするためのprint  
+  throw Exception('Failed at 2');  
+}  
+</code></pre>
+<p>他の二つの関数にも print を追加しておきます（コードは省略）。</p>
+<p>エラーが起こるのは三つのうち一つだけですが、<code>wait()</code> 自体でエラーが起こった状態になるので対処が必要です。<br>
+<code>onError()</code> を用いると、三つのうちどれが失敗したのかわからないことと、その場で main 関数から抜けたくてもできないことから、try-catch のほうがここでは使いやすいと思います。<br>
+（<code>onError()</code> については <a href="https://blog.kaboc.cc/posts/20221219-01gmnatcf5" target="_blank" rel="noopener">昨日の記事</a> をご覧ください。）</p>
+<pre><code class="language-dart">  final List&lt;int&gt; results;  
+  
+  try {  
+    final results = await Future.wait([ ... ]);  
+    print(result);  
+  } on Exception catch (e) {  
+    print(e);  
+  }  
+</code></pre>
+<p>実行すると、追加しておいた print によって下記のように出力されます。<br>
+途中でエラーが起こっても全てが実行されるまで Future が解決しない動作になっています。</p>
+<pre><code class="language-text">asynchronousFunc3  
+asynchronousFunc2  
+asynchronousFunc1  
+Exception: Failed at 2  
+</code></pre>
+<h3 id="%E8%A4%87%E6%95%B0%E3%81%AE%E9%96%A2%E6%95%B0%E3%81%A7%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%8C%E8%B5%B7%E3%81%93%E3%81%A3%E3%81%9F%E5%A0%B4%E5%90%88">複数の関数でエラーが起こった場合</h3>
+<p>三番目に実行される関数でも throw された場合、<code>wait()</code> のエラーは先に起こった二番目の内容になります。</p>
+<h3 id="%E4%B8%80%E3%81%A4%E3%81%8C%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%AB%E3%81%AA%E3%81%A3%E3%81%9F%E3%82%89%E3%81%99%E3%81%90%E3%81%AB%E6%AD%A2%E3%82%81%E3%82%8B">一つがエラーになったらすぐに止める</h3>
+<p><code>wait()</code> には <code>eagerError</code> という引数があります。<br>
+<code>true</code> を指定すると、エラーが起こったときに <code>wait()</code> の Future が即解決してエラーになります。</p>
+<p><code>eagerError</code> の指定を追加して実行してみましょう。</p>
+<pre><code class="language-dart">results = await Future.wait(  
+  eagerError: true,  
+  [ ... ],  
+);  
+</code></pre>
+<pre><code class="language-text">asynchronousFunc3  
+asynchronousFunc2  
+Exception: Failed at 2  
+asynchronousFunc1  
+</code></pre>
+<p>先ほどと違ってエラーが起きた時点で catch ブロックに至っていることがわかります。<br>
+その後に 1 の結果が出力されているのは、例外が発生する前に既に 1 の <code>Future.delayed</code> は実行されていて、そのコールバックは例外が起こっても止まらないからです。</p>
+<h3 id="%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%8C%E8%B5%B7%E3%81%93%E3%81%A3%E3%81%A6%E3%82%82%E7%B5%90%E6%9E%9C%E3%82%92%E5%80%8B%E5%88%A5%E3%81%AB%E7%A2%BA%E8%AA%8D%E3%81%97%E3%81%9F%E3%81%84">エラーが起こっても結果を個別に確認したい</h3>
+<p>上の方法では Future がエラーとして解決され、個々の関数の結果は results に入りません。<br>
+並行実行しつつ個々の結果を得る方法の一つとして <code>package:async</code> の <a href="https://pub.dev/documentation/async/latest/async/Result-class.html" target="_blank" rel="noopener">Result</a> クラスがあります。</p>
+<pre><code class="language-dart">import 'package:async/async.dart';  
+  
+Future&lt;Result&lt;int&gt;&gt; asynchronousFunc1() {  
+  return Future.delayed(const Duration(milliseconds: 30), () =&gt; Result.value(1));  
+}  
+  
+Future&lt;Result&lt;int&gt;&gt; asynchronousFunc2() {  
+  return Future.delayed(const Duration(milliseconds: 20), () =&gt; Result.error(Exception('Exception at 2')));  
+}  
+  
+Future&lt;Result&lt;int&gt;&gt; asynchronousFunc3() {  
+  return Future.delayed(const Duration(milliseconds: 10), () =&gt; Result.value(3));  
+}  
+...  
+  
+Future&lt;void&gt; main() async {  
+  final results = await Future.wait([  
+    asynchronousFunc1(),  
+    asynchronousFunc2(),  
+    asynchronousFunc3(),  
+  ]);  
+  
+  for (var i = 0; i &lt; results.length; i++) {  
+    final r = results[i];  
+    print('[$i] ${r.isError ? r.asError!.error : r.asValue!.value}');  
+  }  
+}  
+</code></pre>
+<p>1 と 3 では <code>Result.value</code>（<code>ValueResult</code> 型）、2 だけは <code>Result.error</code>（<code>ErrorResult</code> 型）を返しています。<br>
+型の確認は <code>isValue</code> と <code>isError</code>（または <code>is</code> 演算子）、値やエラーを取り出すのはそれぞれ <code>asValue!.value</code>、<code>asError!.error</code> でできます。</p>
+<p>実行すると次のようになります。</p>
+<pre><code class="language-text">asynchronousFunc3  
+asynchronousFunc2  
+asynchronousFunc1  
+[0] 1  
+[1] Exception: Exception at 2  
+[2] 3  
+</code></pre>
+<p>エラーの捕捉は <code>wait()</code> の実行時ではなく <code>wait()</code> によって実行される非同期関数側で行い、エラーであれば <code>return Result.error(...);</code> を行うという形になります。</p>
+<h2 id="FutureGroup">FutureGroup</h2>
+<p><code>Future.wait()</code> の他に package:async の <a href="https://pub.dev/documentation/async/latest/async/FutureGroup-class.html" target="_blank" rel="noopener">FutureGroup</a> も使えます。<br>
+同じ例を書き換えたものを載せますので参考にしてください。</p>
+<pre><code class="language-dart">Future&lt;void&gt; main() async {  
+  final group = FutureGroup&lt;int&gt;()  
+    ..add(asynchronousFunc1())  
+    ..add(asynchronousFunc2())  
+    ..add(asynchronousFunc3())  
+    ..close();  
+  
+  try {  
+    final results = await group.future;  
+    print(results);  
+  } on Exception catch (e) {  
+    print(e);  }  
+}  
+</code></pre>
+<pre><code class="language-text">asynchronousFunc3  
+asynchronousFunc2  
+Exception: Failed at 2  
+asynchronousFunc1  
+</code></pre>
+<h1 id="%E3%82%AD%E3%83%A3%E3%83%B3%E3%82%BB%E3%83%AB%E3%81%99%E3%82%8B">キャンセルする</h1>
+<p>package:async の <a href="https://pub.dev/documentation/async/latest/async/CancelableOperation-class.html" target="_blank" rel="noopener">CancelableOperation</a> でできます。<br>
+以前に書いた記事が Qiita にあるので、気になる方はそちらをお読みください。</p>
+<ul>
+<li><a href="https://qiita.com/kabochapo/items/c5061240f90468d16527" target="_blank" rel="noopener">DartでFutureをキャンセルする - Qiita</a></li>
+</ul>
+<p>その記事に書いていませんが、<code>CancelableOperation</code> の Completer である <a href="https://pub.dev/documentation/async/latest/async/CancelableCompleter/CancelableCompleter.html" target="_blank" rel="noopener">CancelableCompleter</a> もあるので、存在だけでも覚えておくと良いと思います。</p>
+<h1 id="%E3%82%84%E3%82%8A%E7%9B%B4%E3%81%9B%E3%82%8B%20Timer">やり直せる Timer</h1>
+<p>package:async の <a href="https://pub.dev/documentation/async/latest/async/RestartableTimer-class.html" target="_blank" rel="noopener">RestartableTimer</a> を使うと Timer を再実行できます。<br>
+dart:async の <a href="https://api.dart.dev/stable/dart-async/Timer-class.html" target="_blank" rel="noopener">Timer</a> を実装したもので、違いは主に次の二点だけです。</p>
+<ul>
+<li>定期実行のための名前付きの <code>.periodic</code> コンストラクタがない</li>
+<li><a href="https://pub.dev/documentation/async/latest/async/RestartableTimer/reset.html" target="_blank" rel="noopener">reset()</a> というメソッドがある</li>
+</ul>
+<h2 id="reset()">reset()</h2>
+<p>メソッド名から「開始位置を戻す」のみの動作に思えますが、「戻す＋タイマー開始」です。<br>
+これより前に中断または終了していても最初からになります。<br>
+restart ではなく reset という語が使われているのはそれを明確にするためだろうと思います。</p>
+<p>既に動いているときに最初に戻したい場合、先に <code>cancel()</code> せずに使えます。</p>
+<pre><code class="language-dart">import 'package:async/async.dart';  
+  
+Future&lt;void&gt; main() async {  
+  final stopwatch = Stopwatch();  
+  
+  // 3秒後にコールバック関数を実行するタイマー（生成と同時に動き出す）  
+  final timer = RestartableTimer(Duration(seconds: 3), () {  
+    // 3秒経過時に呼ばれて秒数が表示される  
+    final elapsedSeconds = (stopwatch.elapsedMilliseconds / 1000).round();  
+    print(elapsedSeconds); // 3  
+  });  
+  
+  // 2秒後に時間計測を開始＆タイマーを始めに戻して実行  
+  await Future&lt;void&gt;.delayed(const Duration(seconds: 2));  
+  stopwatch.start();  
+  timer.reset();  
+}  
+</code></pre>
+<h1 id="%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86%E3%81%AE%E7%B5%90%E6%9E%9C%E3%82%92%E3%82%AD%E3%83%A3%E3%83%83%E3%82%B7%E3%83%A5%E3%81%99%E3%82%8B">非同期処理の結果をキャッシュする</h1>
+<p>キャッシュの機能を持つ状態管理パッケージもありますが、付属していなくても可能です。</p>
+<h2 id="AsyncMemoizer">AsyncMemoizer</h2>
+<p>またまた package:async です。<br>
+<a href="https://pub.dev/documentation/async/latest/async/AsyncMemoizer-class.html" target="_blank" rel="noopener">AsyncMemoizer</a> でキャッシュ（メモ化）することができます。</p>
+<pre><code class="language-dart">import 'dart:async';  
+import 'package:async/async.dart';  
+  
+Future&lt;int&gt; tenfoldOf(int tick) async {  
+  print('Called at tick $tick');  
+  return tick * 10;  
+}  
+  
+void main() {  
+  final memoizer = AsyncMemoizer&lt;int&gt;();  
+  
+  Timer.periodic(const Duration(seconds: 1), (timer) async {  
+    final tick = timer.tick;  
+    final v = await memoizer.runOnce(() =&gt; tenfoldOf(tick));  
+    print('[$tick] $v');  
+  
+    if (tick == 5) timer.cancel();  
+  });  
+}  
+</code></pre>
+<pre><code class="language-text">Called at tick 1  
+[1] 10  
+[2] 10  
+[3] 10  
+[4] 10  
+[5] 10  
+</code></pre>
+<h3 id="runOnce()">runOnce()</h3>
+<p>上の例では、10 倍の数を返す <code>tenFoldOf()</code> が <a href="https://pub.dev/documentation/async/latest/async/AsyncMemoizer/runOnce.html" target="_blank" rel="noopener">runOnce()</a> のコールバックから呼ばれます。<br>
+<code>runOnce()</code> は定期実行のタイマーで 5 回呼ばれるのにコールバックは最初しか実行されない様子がこの例で見えます。</p>
+<h3 id="hasRun">hasRun</h3>
+<p>ここでは使いませんでしたが、<code>runOnce()</code> が既に呼ばれたかどうかを <a href="https://pub.dev/documentation/async/latest/async/AsyncMemoizer/hasRun.html" target="_blank" rel="noopener">hasRun</a> というプロパティの値を見て確認できます。</p>
+<h2 id="AsyncCache">AsyncCache</h2>
+<p>package:async の <a href="https://pub.dev/documentation/async/latest/async/AsyncCache-class.html" target="_blank" rel="noopener">AsyncCache</a> で <code>AsyncMemoizer</code> より柔軟にキャッシュを扱えます。</p>
+<p>キャッシュする期間の指定と必要に応じたクリアが可能で、変化の頻度が低いデータを何度も取得しないようにしたりコストの高い処理の実行を間引いたりするのに役立ちます。</p>
+<pre><code class="language-dart">void main() {  
+  final cache = AsyncCache&lt;int&gt;(const Duration(seconds: 3));  
+  
+  Timer.periodic(const Duration(seconds: 1), (timer) async {  
+    final tick = timer.tick;  
+    final v = await cache.fetch(() =&gt; tenfoldOf(tick));  
+    print('[$tick] $v');  
+  
+    if (tick == 6) cache.invalidate();  
+    if (tick == 8) timer.cancel();  
+  });  
+}  
+</code></pre>
+<pre><code class="language-text">Called at tick 1  
+[1] 10  
+[2] 10  
+[3] 10  
+[4] 10  
+Called at tick 5  
+[5] 50  
+[6] 50  
+Called at tick 7  
+[7] 70  
+[8] 70  
+</code></pre>
+<h3 id="fetch()">fetch()</h3>
+<p><code>tenFoldOf()</code> が <a href="https://pub.dev/documentation/async/latest/async/AsyncCache/fetch.html" target="_blank" rel="noopener">fetch()</a> のコールバックから呼ばれるようになっています。<br>
+<code>fetch()</code> は毎秒実行されますが、キャッシュの期間として設定している 3 秒間はコールバックがスキップされてキャッシュ済みのデータが返されます。</p>
+<p>※ 出力結果で 4 秒置きになっているのは、1 秒目の実行後の 2 ～ 4 秒目の 3 秒間にキャッシュデータが使われるからです。</p>
+<h3 id="invalidate()">invalidate()</h3>
+<p><a href="https://pub.dev/documentation/async/latest/async/AsyncCache/invalidate.html" target="_blank" rel="noopener">invalidate()</a> でキャッシュをクリアできます。<br>
+上の例では 6 秒経ったときに実行しているので 7 秒目で <code>tenFoldOf()</code> が再実行されています。</p>
+<h1 id="await%20%E3%81%97%E3%81%AA%E3%81%84">await しない</h1>
+<p><a href="https://dart-lang.github.io/linter/lints/unawaited_futures.html" target="_blank" rel="noopener">unawaited_futures</a> の lint ルールを有効にすると、Future の解決を待つことを忘れているときに警告してくれます。<br>
+しかし待たなくてもいい非同期処理もあります。</p>
+<h2 id="unawaited()">unawaited()</h2>
+<p><a href="https://api.dart.dev/stable/dart-async/unawaited.html" target="_blank" rel="noopener">unawaited()</a> はまさにその用途で Dart 2.14 ～ 2.15 にて追加された関数です。<br>
+（変更履歴によれば 2.14 ですが、ソースコード上で <code>@Since("2.15")</code> になっています。）</p>
+<pre><code class="language-dart">import 'dart:async';  
+  
+Future&lt;void&gt; main() async {  
+  unawaited(asynchronousFunc());  
+}  
+</code></pre>
+<p>ただし、その非同期処理でエラーが起こると unhandled error になってしまいます。<br>
+await していないので try-catch で捕捉することができませんし、<code>unawaited()</code> の戻り値は void なので <code>catchError()</code> や <code>onError()</code> も使えません。<br>
+これを利用するのはエラーが起こり得ない場合だけにしましょう。</p>
+<p>なお、この関数を使わずに <code>// ignore: unawaited_futures</code> というコメントによって警告を抑え込むこともできますが、意図通りの名前を持つ <code>unawaited()</code> を使うほうがより明確にその意図を伝えることができます。<br>
+（ignore でも unawaited ほど明確でないにしても意図は示せるのでお好みで。）</p>
+<h2 id="ignore()">ignore()</h2>
+<p><a href="https://api.dart.dev/stable/dart-async/FutureExtensions/ignore.html" target="_blank" rel="noopener">FutureExtensions</a> の <a href="https://api.dart.dev/stable/dart-async/FutureExtensions/ignore.html" target="_blank" rel="noopener">ignore()</a> なら待たずに処理結果もエラーも完全に無視できます。<br>
+Dart 2.14 で追加されました。</p>
+<p>便利ですが、重大なエラーを無視してしまうことがないようにご注意ください。</p>
+<pre><code class="language-dart">Future&lt;void&gt; main() async {  
+  asynchronousFunc().ignore();  
+}  
+</code></pre>
+<h1 id="%E3%83%86%E3%82%B9%E3%83%88">テスト</h1>
+<p>時間が足りなかったので後で追加します…。</p>
+</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20221220-01gmqz2kpr&amp;text=Dart%E3%81%AE%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86%E3%81%AE%E7%90%86%E8%A7%A3%E3%82%92%E6%B7%B1%E3%82%81%E3%82%8B%EF%BC%88Tips%E7%B7%A8%EF%BC%89%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
