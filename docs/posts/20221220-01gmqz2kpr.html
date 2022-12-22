@@ -371,14 +371,14 @@ await を使ったことではなく <code>fakeAsync()</code> のコールバッ
   });  
 });  
 </code></pre>
-<h3 id="%E9%9B%A3%E7%82%B9%203">難点 3</h3>
+<h4 id="%E9%9B%A3%E7%82%B9%203">難点 3</h4>
 <p><code>fakeAsync()</code> を await した場合もテストが終わらなくなります。</p>
 <pre><code class="language-dart">test('...', () async {  
   final result = await fakeAsync((_) =&gt; timeConsumingFunc());  
   expect(result, equals('expected value'));  
 });  
 </code></pre>
-<h3 id="%E9%9B%A3%E7%82%B9%204">難点 4</h3>
+<h4 id="%E9%9B%A3%E7%82%B9%204">難点 4</h4>
 <p>単純に言って「使いにくい」です。<br>
 Future の解決を await 以外の方法で何度も待たないといけません。</p>
 <p>例えば、ValueCache の AsyncCache 利用版では次のようにテストが長ったらしくなります。</p>
@@ -487,7 +487,6 @@ Clock も使えます。</p>
 <p>なお（深掘りしていないので理由は把握していませんが）<code>testWidgets()</code> では <code>await</code> や <code>completion()</code> が使えます。</p>
 <h3 id="testWidgets()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">testWidgets() の中身</h3>
 <p>ここからは詳細を書いているだけなので折りたたんでおきます。<br>
-見たい方だけご覧ください。<br>
 コードはかなり簡略化して掲載します。</p><details>  
 <summary>クリックで開く</summary>
 <p><a href="https://api.flutter.dev/flutter/flutter_test/testWidgets.html" target="_blank" rel="noopener">testWidgets()</a> では <code>TestWidgetsFlutterBinding</code> の <code>runTest()</code> が使われています。<br>
