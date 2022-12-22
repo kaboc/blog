@@ -1,0 +1,115 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartでジェネリック型のnullabilityを判定したい | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221222-01gmwrp7sg"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dartでジェネリック型のnullabilityを判定したい | Kabolog"><meta name="description" content="Dart Advent Calendar 2022 の 22 日目の記事です。 ジェネリクスを使うときの型のややこしさについて「&lt;T&gt; と &lt;T extends Object?&gt; と &lt;T extends Object&gt;」の記事に書きましたが、それに関係する話です。 何をしたいか class Foo&lt;T extends Object?&gt; { Foo(this"><meta name="keywords" content="Dart,小ネタ"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221222-01gmwrp7sg"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartでジェネリック型のnullabilityを判定したい | Kabolog"><meta property="og:description" content="Dart Advent Calendar 2022 の 22 日目の記事です。 ジェネリクスを使うときの型のややこしさについて「&lt;T&gt; と &lt;T extends Object?&gt; と &lt;T extends Object&gt;」の記事に書きましたが、それに関係する話です。 何をしたいか class Foo&lt;T extends Object?&gt; { Foo(this"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-8T92E4QR06');
+</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Dartでジェネリック型のnullabilityを判定したい</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E5%B0%8F%E3%83%8D%E3%82%BF">Dart &gt; 小ネタ</a></li></ul><time datetime="2022-12-22T11:14:57.762863Z">2022-12-22</time></section><article class="markdown-body"><p><a href="https://qiita.com/advent-calendar/2022/dart" target="_blank" rel="noopener">Dart Advent Calendar 2022</a> の 22 日目の記事です。</p>
+<p>ジェネリクスを使うときの型のややこしさについて「<a href="https://blog.kaboc.cc/posts/20221024-01gg4h905n" target="_blank" rel="noopener">&lt;T&gt; と &lt;T extends Object?&gt; と &lt;T extends Object&gt;</a>」の記事に書きましたが、それに関係する話です。</p>
+<h1 id="%E4%BD%95%E3%82%92%E3%81%97%E3%81%9F%E3%81%84%E3%81%8B">何をしたいか</h1>
+<pre><code class="language-dart">class Foo&lt;T extends Object?&gt; {  
+  Foo(this.value);  
+  
+  T value;  
+}  
+</code></pre>
+<p><code>Foo&lt;T extends Object?&gt;</code> としているので <code>T value</code> の <code>T</code> は定義としては null があり得ますが、実行時には non-null になることもあります。</p>
+<p>Foo の生成時に明示的に型を示して <code>Foo&lt;int&gt;</code> とすれば <code>T</code> は non-null です。<br>
+明示されない場合はコンストラクタに渡された値によって決まります。</p>
+<pre><code class="language-dart">final foo1 = Foo&lt;int?&gt;(123);  
+final foo2 = Foo&lt;int&gt;(123);  
+final foo3 = Foo(123);  
+  
+foo1.value = null; // 可能  
+foo2.value = null; // 不可  
+foo3.value = null; // 不可  
+</code></pre>
+<p>そのようなクラスで、実行時に <code>T</code> が nullable な型かどうかを判定したいということです。</p>
+<h2 id="%E3%81%AA%E3%81%9C%E5%88%A4%E5%AE%9A%E3%81%8C%E5%BF%85%E8%A6%81%E3%81%8B">なぜ判定が必要か</h2>
+<p>アプリではジェネリクスを複雑に使うことは多くないですが、パッケージを作るときには汎用性のために多用して複雑になりやすくて、次のような危険や不安が生じます。</p>
+<ul>
+<li>扱いが難しくて、気をつけながらいじってもミスが起こりやすい</li>
+<li>ミスにすぐに気づけないかもしれない</li>
+<li>デグラデーションでパッケージの利用者に迷惑を掛けたくない</li>
+<li>不安に思いながら触るのは辛い</li>
+</ul>
+<p>これらの対策としてテストは有効で、安心して開発を継続するためにも大事だと考えています。</p>
+<h1 id="%E5%88%A4%E5%AE%9A%E6%96%B9%E6%B3%95">判定方法</h1>
+<p>イメージしやすいように先ほどのコードにメソッドを加えます。<br>
+※検討時点でのイメージなので実用時の使い方とは異なります。</p>
+<pre><code class="language-dart">class Foo&lt;T extends Object?&gt; {  
+  const Foo(this.value);  
+  
+  final T value;  
+  
+  void printNullability() {  
+    final isNullable = ...; // ここで判定してbool値をprintする  
+    print(isNullable);  
+  }  
+}  
+</code></pre>
+<h2 id="%E4%BD%BF%E3%81%88%E3%81%AA%E3%81%84%E6%96%B9%E6%B3%95">使えない方法</h2>
+<p>プロパティの値が null かどうかは <code>value == null</code> か <code>value is! Object</code> で確認できますが、判定したいのはそれではなくて value の <strong>型が nullable かどうか</strong> です。<br>
+同じ方法では判定できません。</p>
+<p><strong>補足</strong></p>
+<p><code>value is Object?</code> も使えません。<br>
+T が <code>Object</code> でも <code>Object?</code> でも true になってしまいます。</p>
+<h2 id="%E6%AD%A3%E3%81%97%E3%81%84%E6%96%B9%E6%B3%95">正しい方法</h2>
+<pre><code class="language-dart">final isNullable = null is T;  
+</code></pre>
+<p>Stack Overflow で見つけました。<br>
+この回答者はたぶん Dart チームの Lasse さんです。</p>
+<ul>
+<li><a href="https://stackoverflow.com/a/66249380" target="_blank" rel="noopener">How do I check whether a generic type is nullable in Dart NNBD? - Stack Overflow</a></li>
+</ul>
+<blockquote>
+<p>Try:</p>
+<pre><code class="language-dart">bool isNullable&lt;T&gt;() =&gt; null is T;  
+</code></pre>
+</blockquote>
+<p>初見では奇妙に思えましたが、<code>T</code> を具体的な型に置き換えると理解できました。</p>
+<pre><code class="language-dart">print(null is int);  // false  
+print(null is int?); // true  
+</code></pre>
+<p>null は <code>int</code> でもそのサブクラスでもないので <code>is int</code> は false です。<br>
+一方、null 許容型である <code>int?</code> は当然 null を含むので <code>is int?</code> は true ということですね。</p>
+<p><code>is</code> 演算子を使うとき、<code>value is int</code> のように判定対象をいつも左辺にするので今回も判定したい <code>T</code> が左辺だと思い込んでいて、右辺に置く <code>null is T</code> の形は自分で考えつきませんでした。</p>
+<h1 id="%E5%AE%9F%E7%94%A8">実用</h1>
+<p>Stack Overflow の回答の関数をそのまま使うなら、テストでは次の書き方になります。</p>
+<pre><code class="language-dart">expect(isNullable&lt;T&gt;(), isTrue);  
+</code></pre>
+<p>しかしクラス内で使うわけではないので <code>T</code> にアクセスできません。<br>
+工夫すれば使えるかもしれませんがやりにくいです。</p>
+<p>そこで <code>T</code> 型のプロパティ（の値）を引数で受け取るようにしました。</p>
+<pre><code class="language-dart">bool isNullable&lt;T&gt;(T value) =&gt; null is T;  
+  
+...  
+  
+final foo1 = Foo&lt;int?&gt;(123);  
+final foo2 = Foo&lt;int&gt;(123);  
+  
+expect(isNullable(foo1.value), isTrue);  
+expect(isNullable(foo2.value), isFalse);  
+</code></pre>
+<h3 id="Matcher%20%E5%8C%96%E3%81%AF%E6%96%AD%E5%BF%B5">Matcher 化は断念</h3>
+<p>できれば Matcher を作って次のように書きたいと考えていました。</p>
+<pre><code class="language-dart">expect(foo.value, isNullable);  
+</code></pre>
+<p>作るとしたら次のような感じかと思います。</p>
+<pre><code class="language-dart">const Matcher isNullable = _IsNullable();  
+  
+class _IsNullable&lt;T&gt; extends Matcher {  
+  const _IsNullable();  
+  
+  @override  
+  bool matches(covariant T item, Map matchState) =&gt; null is T;  
+  
+  @override  
+  Description describe(Description description) =&gt; description.add('nullable');  
+}  
+</code></pre>
+<p>ところがこれを使うと、<code>expect()</code> で失敗するはずの場合でも常に通ってしまいました。<br>
+おそらく、親である Matcher クラスで <code>matches()</code> の引数が <code>dynamic</code> になっていることが原因です。<br>
+⇒ <a href="https://github.com/dart-lang/matcher/blob/7e6a665da079baa3e2a2046ab02e4353ee32556c/lib/src/interfaces.dart#L42" target="_blank" rel="noopener">該当箇所</a></p>
+<p>残念ですが、Matcher にせずに関数のままでも使えるのでそれで妥協しました。</p>
+</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20221222-01gmwrp7sg&amp;text=Dart%E3%81%A7%E3%82%B8%E3%82%A7%E3%83%8D%E3%83%AA%E3%83%83%E3%82%AF%E5%9E%8B%E3%81%AEnullability%E3%82%92%E5%88%A4%E5%AE%9A%E3%81%97%E3%81%9F%E3%81%84%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
