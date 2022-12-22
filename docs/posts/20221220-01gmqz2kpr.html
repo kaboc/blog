@@ -1,16 +1,17 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartの非同期処理の理解を深める（Tips編） | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta name="description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 非同期関連のことばかり書いていると飽きるので今日をシリーズ最終回にします。 並行実行 複"><meta name="keywords" content="Dart,非同期処理"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta property="og:description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 非同期関連のことばかり書いていると飽きるので今日をシリーズ最終回にします。 並行実行 複"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartの非同期処理の理解を深める（Tips編） | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta name="description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 非同期関連のことばかり書いていると飽きるのでシリーズ最終回とします。 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 20 日目 - D"><meta name="keywords" content="Dart,非同期処理"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta property="og:description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 非同期関連のことばかり書いていると飽きるのでシリーズ最終回とします。 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 20 日目 - D"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-8T92E4QR06');
 </script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Dartの非同期処理の理解を深める（Tips編）</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86">Dart &gt; 非同期処理</a></li></ul><time datetime="2022-12-20T14:30:22.662935Z">2022-12-20</time></section><article class="markdown-body"><p><a href="https://qiita.com/advent-calendar/2022/dart" target="_blank" rel="noopener">Dart Advent Calendar 2022</a> の 20 日目の記事です。</p>
-<p>一昨日から非同期処理のシリーズとして書いています。</p>
+<p>一昨日から非同期処理のシリーズとして書いています。<br>
+非同期関連のことばかり書いていると飽きるのでシリーズ最終回とします。</p>
 <ul>
 <li>18 日目 - <a href="https://blog.kaboc.cc/posts/20221218-01gmj1228q" target="_blank" rel="noopener">Dartの非同期処理の理解を深める（キュー編）</a></li>
 <li>19 日目 - <a href="https://blog.kaboc.cc/posts/20221219-01gmnatcf5" target="_blank" rel="noopener">Dartの非同期処理の理解を深める（エラーハンドリング編）</a></li>
+<li>20 日目 - Dartの非同期処理の理解を深める（Tips編）</li>
 </ul>
-<p>非同期関連のことばかり書いていると飽きるので今日をシリーズ最終回にします。</p>
 <h1 id="%E4%B8%A6%E8%A1%8C%E5%AE%9F%E8%A1%8C">並行実行</h1>
 <p>複数の非同期処理を一つずつ順番に実行しなくていい場合、並行させるほうが全部が終わるまでの時間を短縮できます。</p>
 <h2 id="Future.wait()">Future.wait()</h2>
@@ -49,8 +50,8 @@ Future&lt;void&gt; main() async {
 </code></pre>
 <p>他の二つの関数にも print を追加しておきます（コードは省略）。</p>
 <p>エラーが起こるのは三つのうち一つだけですが、<code>wait()</code> 自体でエラーが起こった状態になるのでその部分で対処が必要です。<br>
-<code>onError()</code> を用いると、三つのうちどれが失敗したのかわからないことと、その場で main 関数から抜けたくてもできないことから、try-catch のほうがここでは使いやすいと思います。<br>
-（<code>onError()</code> については <a href="https://blog.kaboc.cc/posts/20221219-01gmnatcf5" target="_blank" rel="noopener">昨日の記事</a> をご覧ください。）</p>
+<code>onError()</code> を用いると、三つのうちどれが失敗したのかわからないことと、その場で main 関数から抜けたくてもできないことから、try-catch のほうがここでは使いやすいと思います。</p>
+<p>※<code>onError()</code> については <a href="https://blog.kaboc.cc/posts/20221219-01gmnatcf5" target="_blank" rel="noopener">昨日の記事</a> をご覧ください。</p>
 <pre><code class="language-dart">  final List&lt;int&gt; results;  
   
   try {  
@@ -254,7 +255,7 @@ Called at tick 7
 <h3 id="fetch()">fetch()</h3>
 <p><code>tenFoldOf()</code> が <a href="https://pub.dev/documentation/async/latest/async/AsyncCache/fetch.html" target="_blank" rel="noopener">fetch()</a> のコールバックから呼ばれるようになっています。<br>
 <code>fetch()</code> は毎秒実行されますが、キャッシュの期間として設定している 3 秒間はコールバックがスキップされてキャッシュ済みのデータが返されます。</p>
-<p>※ 出力結果で 4 秒置きになっているのは、1 秒目が実行された後に 2 ～ 4 秒目の 3 秒間はキャッシュデータが使われるからです。</p>
+<p>※出力結果で 4 秒置きになっているのは、1 秒目が実行された後に 2 ～ 4 秒目の 3 秒間はキャッシュデータが使われるからです。</p>
 <h3 id="invalidate()">invalidate()</h3>
 <p><a href="https://pub.dev/documentation/async/latest/async/AsyncCache/invalidate.html" target="_blank" rel="noopener">invalidate()</a> でキャッシュをクリアできます。<br>
 上の例では 6 秒経ったときに実行しているので 7 秒目で <code>tenFoldOf()</code> が再実行されています。</p>
@@ -284,5 +285,273 @@ Dart 2.14 で追加されました。</p>
 }  
 </code></pre>
 <h1 id="%E3%83%86%E3%82%B9%E3%83%88">テスト</h1>
-<p>時間が足りなかったので後で追加します…。</p>
+<p>時間経過した状態や未来の日時での動作をテストしたいことがあります。<br>
+そんなときに使える便利な方法を見ていきましょう。</p>
+<h2 id="FakeAsync">FakeAsync</h2>
+<p>例として、30 秒経つと値が消えるクラスを使います。<br>
+経過するまでは既にある値のままというキャッシュ機能です。</p>
+<p>一定期間だけのキャッシュといえば <a href="#AsyncCache">AsyncCache</a> ですが、使いにくかったのでタイマーにしました。<br>
+そのことは後述します。</p>
+<pre><code class="language-dart">class ValueCache&lt;T&gt; {  
+  ValueCache(T? value) {  
+    updateValue(value);  
+  }  
+  
+  T? _value;  
+  Timer? _timer;  
+  
+  T? get value =&gt; _value;  
+  
+  void updateValue(T? value) {  
+    if (_value != null) {  
+      return;  
+    }  
+  
+    _value = value;  
+  
+    _timer?.cancel();  
+    _timer = Timer(const Duration(seconds: 30), () =&gt; _value = null);  
+  }  
+}  
+</code></pre>
+<p>時間の長さを渡して変更できるようになっていないので、何も考慮せずにテストすると 30 秒間も待たなければなりません。</p>
+<pre><code class="language-dart">test('...', () async {  
+  final cache = ValueCache(123);  
+  expect(cache.value, equals(123));  
+  
+  await Future&lt;void&gt;.delayed(const Duration(seconds: 30)); // ここで待たされる  
+  expect(cache.value, isNull);  
+});  
+</code></pre>
+<p>そこで役立つのが  <a href="https://pub.dev/packages/fake_async" target="_blank" rel="noopener">fake_async</a> です。<br>
+<a href="https://pub.dev/documentation/fake_async/latest/fake_async/fakeAsync.html" target="_blank" rel="noopener">fakeAsync()</a> を使い、コールバックで <a href="https://pub.dev/documentation/fake_async/latest/fake_async/FakeAsync-class.html" target="_blank" rel="noopener">FakeAsync</a> のインスタンスを用いて <a href="https://pub.dev/documentation/fake_async/latest/fake_async/FakeAsync/elapse.html" target="_blank" rel="noopener">elapse()</a> で時間を先送りでき、下記テストは 30 秒間待たずに短時間で終わります。</p>
+<pre><code class="language-dart">import 'package:fake_async/fake_async.dart';  
+  
+...  
+  
+test('...', () {  
+  fakeAsync((async) {  
+    final cache = ValueCache(123);  
+    expect(cache.value, equals(123));  
+      
+    async.elapse(const Duration(seconds: 30)); // 30秒経ったことにする  
+    expect(cache.value, isNull);  
+  });  
+</code></pre>
+<p>ただ残念なことに、<code>await</code> が使えなくなります。<br>
+この例では await する必要がないようにしたので簡潔に書けましたが、Future の結果を使わないといけない場合には <code>then()</code> で外側の変数に値を入れる等の工夫が必要になると思います。</p>
+<pre><code class="language-dart">int? value;  
+timeConsumingFunc().then((v) =&gt; value = v);  
+  
+async.elapse(...);  
+expect(value, ...);  
+</code></pre>
+<h3 id="%E6%B3%A8%E6%84%8F">注意</h3>
+<p>時間が経ったことにするだけなので、短時間でできない処理（重い処理、通信等で時間がかかる処理など）を待たずに済むようになるわけではありません。</p>
+<h3 id="FakeAsync%20%E3%81%AE%E9%9B%A3%E7%82%B9">FakeAsync の難点</h3>
+<p>使いにくい点が多くて残念です<br>
+関連する issue ページは <a href="https://github.com/dart-lang/fake_async/issues/24" target="_blank" rel="noopener">こちら</a> です。</p>
+<h4 id="%E9%9B%A3%E7%82%B9%201">難点 1</h4>
+<p>次のようにすると <code>expect()</code> の matcher が何であれ常に成功扱いになってしまいます。<br>
+await を使ったことではなく <code>fakeAsync()</code> のコールバックを async にすることで起こるようです。</p>
+<pre><code class="language-dart">test('...', () {  
+  fakeAsync((async) async {  
+    final result = await timeConsumingFunc();  
+    expect(result, equals('でたらめな値'));  
+  });  
+});  
+</code></pre>
+<h4 id="%E9%9B%A3%E7%82%B9%202">難点 2</h4>
+<p><code>completion()</code> も使えないようです。<br>
+使うとテストが終わらなくなりました。</p>
+<p>※使えるときもありましたが理由がわかりませんでした。</p>
+<pre><code class="language-dart">test('...', () {  
+  fakeAsync((async) {  
+    expect(timeConsumingFunc(), completion('expected value'));  
+  });  
+});  
+</code></pre>
+<h3 id="%E9%9B%A3%E7%82%B9%203">難点 3</h3>
+<p><code>fakeAsync()</code> を await した場合もテストが終わらなくなります。</p>
+<pre><code class="language-dart">test('...', () async {  
+  final result = await fakeAsync((_) =&gt; timeConsumingFunc());  
+  expect(result, equals('expected value'));  
+});  
+</code></pre>
+<h3 id="%E9%9B%A3%E7%82%B9%204">難点 4</h3>
+<p>単純に言って「使いにくい」です。<br>
+Future の解決を await 以外の方法で何度も待たないといけません。</p>
+<p>例えば、ValueCache の AsyncCache 利用版では次のようにテストが長ったらしくなります。</p>
+<pre><code class="language-dart">class AsyncValueCache&lt;T&gt; {  
+  AsyncValueCache(T? value) {  
+    updateValue(value);  
+  }  
+  
+  final _cache = AsyncCache&lt;T?&gt;(const Duration(seconds: 30));  
+  
+  Future&lt;T?&gt; get value =&gt; _cache.fetch(Future.value);  
+  
+  void updateValue(T? value) {  
+    _cache.fetch(() =&gt; Future.value(value));  
+  }  
+}  
+</code></pre>
+<pre><code class="language-dart">fakeAsync((async) {  
+  int? value;  
+  
+  final cache = AsyncValueCache(123);  
+  cache.value.then((v) =&gt; value = v);  
+  
+  // cache.valueはFutureなので解決待ちが必要  
+  async.flushMicrotasks();  
+  expect(value, equals(123));  
+  
+  async.elapse(const Duration(seconds: 30));  
+  cache.value.then((v) =&gt; value = v);  
+  
+  // ここでまた解決待ちが必要  
+  async.flushMicrotasks();  
+  expect(value, isNull);  
+});  
+</code></pre>
+<p><a href="https://pub.dev/documentation/fake_async/latest/fake_async/FakeAsync/flushMicrotasks.html" target="_blank" rel="noopener">flushMicrotasks()</a> は終わっていない microtask を全部次々と実行して消化するメソッドです。<br>
+<code>AsyncValueCache</code> では <code>Future.value</code> を使っていて microtask queue に入るのでこのメソッドでできますが、event queue に入っている処理はおそらくこれでは消化されないのでご注意ください。</p>
+<p>※類似のメソッドとして <a href="https://pub.dev/documentation/fake_async/latest/fake_async/FakeAsync/flushTimers.html" target="_blank" rel="noopener">flushTimers</a> もあります。<br>
+※microtask については一昨日の「<a href="https://blog.kaboc.cc/posts/20221218-01gmj1228q" target="_blank" rel="noopener">Dartの非同期処理の理解を深める（キュー編）</a>」をご覧ください。</p>
+<h2 id="Clock">Clock</h2>
+<p>FakeAsync で時間を操作しても <code>DateTime</code> の日時や <code>Stopwatch</code> には影響しません。</p>
+<pre><code class="language-dart">fakeAsync((async) {  
+  final stopwatch = Stopwatch()..start();  
+  print(DateTime.now()); // 2022-12-20 22:44:42.339323  
+  
+  async.elapse(Duration(hours: 3));  
+  
+  print(stopwatch.elapsedMilliseconds); // 4  
+  print(DateTime.now()); // 2022-12-20 22:44:42.344323  
+});  
+</code></pre>
+<p>影響させて FakeAsync による時間操作を活用したテストをしたければ <a href="https://pub.dev/packages/clock" target="_blank" rel="noopener">clock</a> が使えます。<br>
+<code>DateTime.now</code>、<code>Stopwatch</code> に対応するものはそれぞれ <a href="https://pub.dev/documentation/clock/latest/clock/Clock/now.html" target="_blank" rel="noopener">clock.now</a>、<a href="https://pub.dev/documentation/clock/latest/clock/Clock/stopwatch.html" target="_blank" rel="noopener">clock.stopwatch</a> です。</p>
+<pre><code class="language-dart">import 'package:clock/clock.dart';  
+  
+...  
+  
+fakeAsync((async) {  
+  final stopwatch = clock.stopwatch()..start();  
+  print(clock.now()); // 2022-12-20 22:44:42.349334  
+  
+  async.elapse(Duration(hours: 3));  
+  
+  print(stopwatch.elapsedMilliseconds); // 10800000  
+  print(clock.now()); // 2022-12-21 01:44:42.349334  
+});  
+</code></pre>
+<p>Clock をアプリなどのコードで使っておけば日時関連のテストがしやすくなります。<br>
+<a href="https://pub.dev/documentation/clock/latest/clock/Clock-class.html" target="_blank" rel="noopener">Clock クラス</a> には <code>days.ago()</code>、<code>daysFromNow()</code> などのメソッドもあって、現在を基準とした過去/未来の日時を取得できます。</p>
+<h3 id="%E6%97%A5%E6%99%82%E3%82%92%E5%A4%89%E3%81%88%E3%82%8B%E4%BE%BF%E5%88%A9%E3%81%AA%E6%96%B9%E6%B3%95">日時を変える便利な方法</h3>
+<h4 id="%E5%88%9D%E6%9C%9F%E5%80%A4%E3%82%92%E8%A8%AD%E5%AE%9A">初期値を設定</h4>
+<p><code>fakeAsync()</code> の <code>initialTime</code> で初期値を設定できます。</p>
+<pre><code class="language-dart">fakeAsync(  
+  initialTime: DateTime(2022, 2, 22),  
+  (async) {  
+    print(clock.now()); // 2022-02-22 00:00:00.000  
+    async.elapse(Duration(hours: 22));  
+    print(clock.now()); // 2022-02-22 22:00:00.000  
+  },  
+);  
+</code></pre>
+<h4 id="%E6%97%A5%E6%99%82%E3%82%92%E5%9B%BA%E5%AE%9A">日時を固定</h4>
+<p>Clock を名前付きの <a href="https://pub.dev/documentation/clock/latest/clock/Clock/Clock.fixed.html" target="_blank" rel="noopener">.fixed</a> コンストラクタで作ると日時を不変にすることができます。</p>
+<pre><code class="language-dart">fakeAsync((async) {  
+  final clock = Clock.fixed(DateTime(2022, 2, 22));  
+  print(clock.now()); // 2022-02-22 00:00:00.000  
+  async.elapse(Duration(hours: 22));  
+  print(clock.now()); // 2022-02-22 00:00:00.000  
+});  
+</code></pre>
+<h2 id="Flutter%20%E3%81%AE%20testWidgets()">Flutter の testWidgets()</h2>
+<p><a href="https://api.flutter.dev/flutter/flutter_test/testWidgets.html" target="_blank" rel="noopener">testWidgets()</a> のコールバックでは実は自動的に <code>FakeAsync</code> が利用されます。<br>
+Dart の <code>test()</code> のときのように <code>fakeAsync()</code> を自分で使う必要はなくて、時間を経過させるのは <a href="https://api.flutter.dev/flutter/flutter_test/WidgetTester/pump.html" target="_blank" rel="noopener">pump()</a> でできます。</p>
+<pre><code class="language-dart">void main() {  
+  testWidgets('Counter increments smoke test', (tester) async {  
+    final cache = ValueCache(123);  
+    expect(cache.value, equals(123));  
+  
+    await tester.pump(const Duration(seconds: 30));  
+    expect(cache.value, isNull);  
+  });  
+}  
+</code></pre>
+<p>これで実際に待たなくても 30 秒が経過したことになって短時間でテストが通ります。<br>
+Clock も使えます。</p>
+<p>なお（深掘りしていないので理由は把握していませんが）<code>testWidgets()</code> では <code>await</code> や <code>completion()</code> が使えます。</p>
+<h3 id="testWidgets()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">testWidgets() の中身</h3>
+<p>ここからは詳細を書いているだけなので折りたたんでおきます。<br>
+見たい方だけご覧ください。<br>
+コードはかなり簡略化して掲載します。</p><details>  
+<summary>クリックで開く</summary>
+<p><a href="https://api.flutter.dev/flutter/flutter_test/testWidgets.html" target="_blank" rel="noopener">testWidgets()</a> では <code>TestWidgetsFlutterBinding</code> の <code>runTest()</code> が使われています。<br>
+⇒ <a href="https://github.com/flutter/flutter/blob/9fb1ae839e0a47bd7bb5e2a3c6dd594fa6b0764c/packages/flutter_test/lib/src/widget_tester.dart#L126-L187" target="_blank" rel="noopener">ソースコード</a></p>
+<pre><code class="language-dart">final binding = TestWidgetsFlutterBinding.ensureInitialized();  
+  
+test(  
+  '...',  
+  () =&gt; binding.runTest(() async { ... },  
+  ...,  
+});  
+</code></pre></details>
+<h3 id="runTest()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">runTest() の中身</h3><details>  
+<summary>クリックで開く</summary>
+<p><a href="https://api.flutter.dev/flutter/flutter_test/TestWidgetsFlutterBinding/runTest.html" target="_blank" rel="noopener">runTest() のドキュメント</a> より：</p>
+<blockquote>
+<p>Call the testBody inside a <code>FakeAsync</code> scope on which <code>pump</code> can advance time.</p>
+<p>意訳： testBody を <code>FakeAsync</code> のスコープの中で呼びます。そのスコープでは <code>pump</code> で時間を進めることができます。</p>
+</blockquote>
+<p>中身を覗いてみると実際に FakeAsync や Clock の記述があります。<br>
+⇒ <a href="https://github.com/flutter/flutter/blob/9fb1ae839e0a47bd7bb5e2a3c6dd594fa6b0764c/packages/flutter_test/lib/src/binding.dart#L1375-L1422" target="_blank" rel="noopener">ソースコード</a></p>
+<pre><code class="language-dart">final fakeAsync = FakeAsync();  
+_clock = fakeAsync.getClock(DateTime.utc(2015));  
+late Future&lt;void&gt; testBodyResult;  
+fakeAsync.run((FakeAsync localFakeAsync) {  
+  testBodyResult = _runTest(testBody, ...);  
+});  
+  
+return Future&lt;void&gt;.microtask(() async {  
+  final resultFuture = testBodyResult.then((_) { /* 何もしない */ });  
+  fakeAsync.flushMicrotasks();  
+  return resultFuture;  
+});  
+</code></pre></details>
+<h3 id="pump()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">pump() の中身</h3><details>  
+<summary>クリックで開く</summary>
+<p><code>elapse()</code> が使われています。<br>
+⇒ <a href="https://github.com/flutter/flutter/blob/9fb1ae839e0a47bd7bb5e2a3c6dd594fa6b0764c/packages/flutter_test/lib/src/binding.dart#L1169-L1190" target="_blank" rel="noopener">ソースコード</a></p>
+<pre><code class="language-dart">return TestAsyncUtils.guard&lt;void&gt;(() {  
+  if (duration != null) {  
+    _currentFakeAsync!.elapse(duration);  
+  }  
+  ...  
+  _currentFakeAsync!.flushMicrotasks();  
+  return Future&lt;void&gt;.value();  
+});  
+</code></pre></details>
+<h3 id="pumpAndSettle()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">pumpAndSettle() の中身</h3><details>  
+<summary>クリックで開く</summary>
+<p><a href="https://api.flutter.dev/flutter/flutter_test/WidgetTester/pumpAndSettle.html" target="_blank" rel="noopener">pumpAndSettle() のドキュメント</a> より：</p>
+<blockquote>
+<p>Repeatedly calls <code>pump</code> with the given duration until there are no longer any frames scheduled.</p>
+<p>意訳： 予定されているフレームが一切なくなるまで与えられた duration で <code>pump</code> を繰り返し呼びます。</p>
+</blockquote>
+<p>⇒ <a href="https://github.com/flutter/flutter/blob/9fb1ae839e0a47bd7bb5e2a3c6dd594fa6b0764c/packages/flutter_test/lib/src/widget_tester.dart#L661-L696" target="_blank" rel="noopener">ソースコード</a></p>
+<pre><code class="language-dart">return TestAsyncUtils.guard&lt;int&gt;(() async {  
+  final DateTime endTime = binding.clock.fromNowBy(timeout);  
+  int count = 0;  
+  do {  
+    ...  
+    await binding.pump(duration, phase);  
+    count += 1;  
+  } while (binding.hasScheduledFrame);  
+  return count;  
+});  
+</code></pre></details>
 </article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20221220-01gmqz2kpr&amp;text=Dart%E3%81%AE%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86%E3%81%AE%E7%90%86%E8%A7%A3%E3%82%92%E6%B7%B1%E3%82%81%E3%82%8B%EF%BC%88Tips%E7%B7%A8%EF%BC%89%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
