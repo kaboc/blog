@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>https://blog.kaboc.cc/posts/20221224-01gn13y59x</loc>
+<lastmod>2022-12-24</lastmod>
+<changefreq>daily</changefreq>
+</url>
+<url>
 <loc>https://blog.kaboc.cc/posts/20221222-01gmwrp7sg</loc>
 <lastmod>2022-12-22</lastmod>
 <changefreq>daily</changefreq>
@@ -52,7 +57,7 @@
 </url>
 <url>
 <loc>https://blog.kaboc.cc/</loc>
-<lastmod>2022-12-22</lastmod>
+<lastmod>2022-12-24</lastmod>
 <changefreq>daily</changefreq>
 </url>
 </urlset>

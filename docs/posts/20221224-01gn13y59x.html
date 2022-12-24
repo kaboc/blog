@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>メソッドに渡すときにawaitするのは危険 | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221224-01gn13y59x"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="メソッドに渡すときにawaitするのは危険 | Kabolog"><meta name="description" content="Dart Advent Calendar 2022 の 24 日目の記事です。 先日の 非同期処理シリーズ のどれかに含めようと思いながら忘れていたことを書きます。 ちょっとしたことで期待する動作と違ってしまうので気をつけましょうという話です。 基礎知識 Flutter で copyWith() というメソッドを使うのはよくあるパターンです。 一部のプロパテ"><meta name="keywords" content="Dart,非同期処理,Flutter,注意点"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221224-01gn13y59x"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="メソッドに渡すときにawaitするのは危険 | Kabolog"><meta property="og:description" content="Dart Advent Calendar 2022 の 24 日目の記事です。 先日の 非同期処理シリーズ のどれかに含めようと思いながら忘れていたことを書きます。 ちょっとしたことで期待する動作と違ってしまうので気をつけましょうという話です。 基礎知識 Flutter で copyWith() というメソッドを使うのはよくあるパターンです。 一部のプロパテ"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-8T92E4QR06');
+</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">メソッドに渡すときにawaitするのは危険</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart%3A%3A%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86">Dart &gt; 非同期処理</a></li><li><a href="../?c=Flutter%3A%3A%E6%B3%A8%E6%84%8F%E7%82%B9">Flutter &gt; 注意点</a></li></ul><time datetime="2022-12-24T03:48:27.763850Z">2022-12-24</time></section><article class="markdown-body"><p><a href="https://qiita.com/advent-calendar/2022/dart" target="_blank" rel="noopener">Dart Advent Calendar 2022</a> の 24 日目の記事です。</p>
+<p>先日の <a href="https://blog.kaboc.cc/posts/20221218-01gmj1228q" target="_blank" rel="noopener">非同期処理シリーズ</a> のどれかに含めようと思いながら忘れていたことを書きます。<br>
+ちょっとしたことで期待する動作と違ってしまうので気をつけましょうという話です。</p>
+<h1 id="%E5%9F%BA%E7%A4%8E%E7%9F%A5%E8%AD%98">基礎知識</h1>
+<p>Flutter で <code>copyWith()</code> というメソッドを使うのはよくあるパターンです。<br>
+一部のプロパティの値だけを変更して新たなオブジェクトを作るときに使います。</p>
+<p>例）profile と imageUrl を持つ User クラス</p>
+<pre><code class="language-dart">class User {  
+  const User({  
+    this.profile = const Profile(),  
+    this.imageUrl = '',  
+  });  
+  
+  final Profile profile;  
+  final String imageUrl;  
+  
+  User copyWith({Profile? profile, String? imageUrl}) {  
+    return User(  
+      profile: profile ?? this.profile,  
+      imageUrl: imageUrl ?? this.imageUrl,  
+    );  
+  }  
+}  
+</code></pre>
+<p>imageUrl だけを変更して新たな User を作るには次のようにします。</p>
+<pre><code class="language-dart">final newUser = oldUser.copyWith(  
+  imageUrl: 'https://example.com/image.jpg',  
+);  
+</code></pre>
+<h1 id="%E5%86%8D%E7%8F%BE%E3%82%B3%E3%83%BC%E3%83%89">再現コード</h1>
+<p>では <code>copyWith()</code> で起こる問題を見ましょう。</p>
+<p>UserNotifier には <code>_fetchProfile()</code> と <code>_fetchImageUrl()</code> があり、その二つを <code>Future.wait()</code> によって並行して実行するようになっています。</p>
+<pre><code class="language-dart">class UserNotifier extends ValueNotifier&lt;User&gt; {  
+  UserNotifier() : super(const User());  
+  
+  Future&lt;void&gt; fetchUser({required String id}) async {  
+    await Future.wait([  
+      _fetchProfile(id),  
+      _fetchImageUrl(id),  
+    ]);  
+  }  
+  
+  Future&lt;void&gt; _fetchProfile(String id) async {  
+    final profile = await repository.fetchProfile(id);  
+    value = value.copyWith(profile: profile);  
+  }  
+  
+  Future&lt;void&gt; _fetchImageUrl(String id) async {  
+    value = value.copyWith(  
+      imageUrl: await repository._fetchImageUrl(id),  
+    );  
+  }  
+}  
+</code></pre>
+<h1 id="%E8%B5%B7%E3%81%93%E3%82%8B%E3%81%93%E3%81%A8">起こること</h1>
+<p>もし <code>fetchImageUrl()</code> のほうが遅く終わる場合に <code>fetchProfile()</code> による value の更新がかき消されてしまいます。<br>
+原因は、取得処理を記述している位置が異なることです。</p>
+<ul>
+<li>fetchProfile()
+<ul>
+<li>取得が終わるのを待ってから <code>copyWith()</code> を使う</li>
+</ul>
+</li>
+<li>fetchImageUrl()
+<ul>
+<li><code>copyWith()</code> の引数のところで取得処理を実行して終わるまで待つ</li>
+</ul>
+</li>
+</ul>
+<p>ここからはそれぞれを A、B と呼びます。</p>
+<h1 id="%E5%8E%9F%E5%9B%A0%E3%82%92%E6%8E%A2%E3%82%8B">原因を探る</h1>
+<h2 id="%E3%82%B9%E3%83%86%E3%83%83%E3%83%97%E5%AE%9F%E8%A1%8C">ステップ実行</h2>
+<p>ブレークポイントを置いてステップ実行してみました。</p>
+<ul>
+<li>1）A で取得を開始</li>
+<li>2）B で <code>copyWith()</code> を呼ぶ</li>
+<li>3）B で取得を開始</li>
+<li>4）A での取得が先に終わる</li>
+<li>5）A で <code>copyWith()</code> を呼ぶ</li>
+<li>6）<code>copyWith()</code> の中身を実行</li>
+<li>7）A が完了</li>
+<li>8）B での取得も終わる</li>
+<li>9）<code>copyWith()</code> の中身を実行</li>
+<li>10）B が完了</li>
+</ul>
+<p>6 と 9 はそれぞれ A と B の取得完了に伴うものなので、順番に value が更新されて期待通りに動きそうに思えます。</p>
+<h2 id="%E5%90%84%E3%82%B9%E3%83%86%E3%83%83%E3%83%97%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%83%87%E3%83%BC%E3%82%BF">各ステップにおけるデータ</h2>
+<p>次に、ステップ実行時に IntelliJ 上に表示されるデータを確認してみました。<br>
+関連するデータは次のようになっているとします。</p>
+<ul>
+<li>User の id： <code>'abcde'</code></li>
+<li>A で取得するデータ： <code>Profile(name: 'Mike', age: 24)</code></li>
+<li>B で取得するデータ： <code>'https://example.com/image.jpg'</code></li>
+</ul>
+<p><strong>2）B で <code>copyWith()</code> を呼ぶ</strong></p>
+<pre><code class="language-text">this = {UserNotifier} UserNotifier#f2826(User#1bf41(profile: Profile(name: , age: 0), imageUrl: ))  
+id = "abcde"  
+</code></pre>
+<p><strong>6）A から呼ばれた <code>copyWith()</code> の中身を実行</strong></p>
+<pre><code class="language-text">this = {User} User#1bf41(profile: Profile(name: , age: 0), imageUrl: )  
+profile = {Profile} Profile(name: Mike, age: 24)  
+imageUrl = null  
+</code></pre>
+<p><strong>7）A が完了</strong></p>
+<pre><code class="language-text">this = {UserNotifier} UserNotifier#f2826(User#816a8(profile: Profile(name: Mike, age: 24), imageUrl: ))  
+id = "abcde"  
+profile = {Profile} Profile(name: Mike, age: 24)  
+</code></pre>
+<p><strong>9）B から呼ばれた <code>copyWith()</code> の中身を実行</strong></p>
+<pre><code class="language-text">this = {User} User#1bf41(profile: Profile(name: , age: 0), imageUrl: )  
+profile = null  
+imageUrl = "https://example.com/image.jpg"  
+</code></pre>
+<p><strong>10）B が完了</strong></p>
+<pre><code class="language-text">this = {UserNotifier} UserNotifier#f2826(User#e1bf0(profile: Profile(name: , age: 0), imageUrl: https://example.com/image.jpg))  
+id = "abcde"  
+</code></pre>
+<p>User の <code>profile</code> は 7 の時点でセットされたのに 9 で初期値になっています。<br>
+また、User のハッシュコードが 7 で <code>#816a8</code> に変わったのに 9 では 2 の時点と同じ <code>#1bf41</code> です。<br>
+これで状況がわかりました。</p>
+<h3 id="%E8%A3%9C%E8%B6%B3">補足</h3>
+<p>UserNotifier は Flutter のフレームワークが提供する <code>ValueNotifier</code> を継承しているので、デバッガや <code>print()</code> の出力に自動的にハッシュコードが含まれます。<br>
+一方、User では自分で <code>toString()</code> をオーバーライドして含めないと確認できません。</p>
+<h1 id="%E5%8E%9F%E5%9B%A0">原因</h1>
+<ul>
+<li>2）B で <code>copyWith()</code> を使って User インスタンスを作り直して value に入れようとする（未完）</li>
+<li>6）A で同様のことを行う（こちらはここで完了し、value が新しいインスタンスになる）</li>
+<li>9）2 での呼ばれた <code>copyWith()</code> の中身はここでようやく実行される</li>
+</ul>
+<p>2 の <code>copyWith()</code> 呼び出しに使っている User は 6 で作り直される前のインスタンスなので、その呼び出しによる 9 の実行時には A での取得結果がないことになります。</p>
+<h1 id="%E3%81%BE%E3%81%A8%E3%82%81">まとめ</h1>
+<p><code>copyWith()</code> を使うときには引数のところで await しないように注意しましょう。<br>
+<code>copyWith()</code> でなくても渡す前に Future を完了させるよう意識しておくのが良いかもしれません。</p>
+</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20221224-01gn13y59x&amp;text=%E3%83%A1%E3%82%BD%E3%83%83%E3%83%89%E3%81%AB%E6%B8%A1%E3%81%99%E3%81%A8%E3%81%8D%E3%81%ABawait%E3%81%99%E3%82%8B%E3%81%AE%E3%81%AF%E5%8D%B1%E9%99%BA%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
