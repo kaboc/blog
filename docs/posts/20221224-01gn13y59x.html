@@ -59,8 +59,8 @@ gtag('config', 'G-8T92E4QR06');
 }  
 </code></pre>
 <h1 id="%E8%B5%B7%E3%81%93%E3%82%8B%E3%81%93%E3%81%A8">起こること</h1>
-<p>もし <code>fetchImageUrl()</code> のほうが遅く終わる場合に <code>fetchProfile()</code> による value の更新がかき消されてしまいます。<br>
-原因は、取得処理を記述している位置が異なることです。</p>
+<p><code>fetchImageUrl()</code> のほうが遅く終わる場合に <code>fetchProfile()</code> による value の更新がかき消されてしまいます。<br>
+取得処理を記述している位置が異なることが関連しています。</p>
 <ul>
 <li>fetchProfile()
 <ul>
