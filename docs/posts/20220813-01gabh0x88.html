@@ -143,10 +143,8 @@ final record = await client.records.create(
   body: {'task': 'タスク1', 'user': response.user!.id},  
 );  
   
-print(record.id);
- // fqCY05ud8RDoPBl  
-print(record.created);
- // 2022-08-13 09:06:13.491  
+print(record.id); // fqCY05ud8RDoPBl  
+print(record.created); // 2022-08-13 09:06:13.491  
 print(record.data); // {task: タスク1, user: 3DKCttAcBXBaoE4}  
 </code></pre>
 <p>追加したレコードの情報が返ってくるのが便利です。</p>
