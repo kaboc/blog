@@ -129,8 +129,10 @@ asynchronousFunc1
 </code></pre>
 <p>エラーの捕捉は <code>wait()</code> の実行時ではなく <code>wait()</code> によって実行される非同期関数側で行い、エラーであれば <code>return Result.error(...);</code> を行うという形になります。</p>
 <h2 id="FutureGroup">FutureGroup</h2>
-<p><code>Future.wait()</code> の他に package:async の <a href="https://pub.dev/documentation/async/latest/async/FutureGroup-class.html" target="_blank" rel="noopener">FutureGroup</a> も使えます。<br>
-同じ例を書き換えたものを載せますので参考にしてください。</p>
+<p><code>Future.wait()</code> の他に package:async の <a href="https://pub.dev/documentation/async/latest/async/FutureGroup-class.html" target="_blank" rel="noopener">FutureGroup</a> も使えます。</p>
+<p>主な違いは、実行する Future を一度に指定せずに <code>add()</code> で追加していける点です。<br>
+エラー時の動作は <code>Future.wait()</code> で <code>eagerError</code> を有効にしたときと同様です。</p>
+<p>同じ例を書き換えたものを載せますので参考にしてください。</p>
 <pre><code class="language-dart">Future&lt;void&gt; main() async {  
   final group = FutureGroup&lt;int&gt;()  
     ..add(asynchronousFunc1())  
@@ -142,7 +144,8 @@ asynchronousFunc1
     final results = await group.future;  
     print(results);  
   } on Exception catch (e) {  
-    print(e);  }  
+    print(e);  
+  }  
 }  
 </code></pre>
 <pre><code class="language-text">asynchronousFunc3  
@@ -156,7 +159,7 @@ asynchronousFunc1
 <ul>
 <li><a href="https://qiita.com/kabochapo/items/c5061240f90468d16527" target="_blank" rel="noopener">DartでFutureをキャンセルする - Qiita</a></li>
 </ul>
-<p><code>CancelableOperation</code> の Completer である <a href="https://pub.dev/documentation/async/latest/async/CancelableCompleter/CancelableCompleter.html" target="_blank" rel="noopener">CancelableCompleter</a> もあり、存在だけでも覚えておくと良いと思います。</p>
+<p><code>CancelableOperation</code> の Completer である <a href="https://pub.dev/documentation/async/latest/async/CancelableCompleter/CancelableCompleter.html" target="_blank" rel="noopener">CancelableCompleter</a> もあり、必要になったときに思い出せるように存在だけでも覚えておくと良いと思います。</p>
 <h1 id="%E3%82%84%E3%82%8A%E7%9B%B4%E3%81%9B%E3%82%8B%20Timer">やり直せる Timer</h1>
 <p>package:async の <a href="https://pub.dev/documentation/async/latest/async/RestartableTimer-class.html" target="_blank" rel="noopener">RestartableTimer</a> を使うとタイマーを再実行できます。<br>
 これは dart:async の <a href="https://api.dart.dev/stable/dart-async/Timer-class.html" target="_blank" rel="noopener">Timer</a> を実装したもので、違いは主に次の二点だけです。</p>
@@ -166,9 +169,9 @@ asynchronousFunc1
 </ul>
 <h2 id="reset()">reset()</h2>
 <p>メソッド名から「開始位置を戻す」のみの動作に思えますが「戻す＋タイマー開始」です。<br>
-これより前に中断または終了していても最初からになります。<br>
+これより前に中断または終了していてもそこからの再開ではなく最初からになります。<br>
 restart ではなく reset という語が使われているのはそれを明確にするためだろうと思います。</p>
-<p>既に動いているときに最初に戻したい場合、先に <code>cancel()</code> せずに使えます。</p>
+<p>既に動いているときに最初に戻したい場合に先に <code>cancel()</code> せずに使えます。</p>
 <pre><code class="language-dart">import 'package:async/async.dart';  
   
 Future&lt;void&gt; main() async {  
@@ -220,7 +223,7 @@ Future&lt;int&gt; tenfoldOf(int tick) async {
 [5] 10  
 </code></pre>
 <h3 id="runOnce()">runOnce()</h3>
-<p>上の例では、10 倍の数を返す <code>tenFoldOf()</code> が <a href="https://pub.dev/documentation/async/latest/async/AsyncMemoizer/runOnce.html" target="_blank" rel="noopener">runOnce()</a> のコールバックから呼ばれます。<br>
+<p>上の例では、10 倍の数を返す <code>tenfoldOf()</code> が <a href="https://pub.dev/documentation/async/latest/async/AsyncMemoizer/runOnce.html" target="_blank" rel="noopener">runOnce()</a> のコールバックから呼ばれます。<br>
 <code>runOnce()</code> は定期実行のタイマーで 5 回呼ばれるのにコールバックは最初しか実行されない様子がこの例で見えます。</p>
 <h3 id="hasRun">hasRun</h3>
 <p>ここでは使いませんでしたが、<code>runOnce()</code> が既に呼ばれたかどうかを <a href="https://pub.dev/documentation/async/latest/async/AsyncMemoizer/hasRun.html" target="_blank" rel="noopener">hasRun</a> というプロパティの値を見て確認できます。</p>
@@ -253,9 +256,9 @@ Called at tick 7
 [8] 70  
 </code></pre>
 <h3 id="fetch()">fetch()</h3>
-<p><code>tenFoldOf()</code> が <a href="https://pub.dev/documentation/async/latest/async/AsyncCache/fetch.html" target="_blank" rel="noopener">fetch()</a> のコールバックから呼ばれるようになっています。<br>
+<p><code>tenfoldOf()</code> が <a href="https://pub.dev/documentation/async/latest/async/AsyncCache/fetch.html" target="_blank" rel="noopener">fetch()</a> のコールバックから呼ばれるようになっています。<br>
 <code>fetch()</code> は毎秒実行されますが、キャッシュの期間として設定している 3 秒間はコールバックがスキップされてキャッシュ済みのデータが返されます。</p>
-<p>※出力結果で 4 秒置きになっているのは、1 秒目が実行された後に 2 ～ 4 秒目の 3 秒間はキャッシュデータが使われるからです。</p>
+<p>※出力結果で 4 秒置きになっているのは、1 秒目が実行されてから 2 ～ 4 秒目の 3 秒間にキャッシュデータが使われるからです。</p>
 <h3 id="invalidate()">invalidate()</h3>
 <p><a href="https://pub.dev/documentation/async/latest/async/AsyncCache/invalidate.html" target="_blank" rel="noopener">invalidate()</a> でキャッシュをクリアできます。<br>
 上の例では 6 秒経ったときに実行しているので 7 秒目で <code>tenFoldOf()</code> が再実行されています。</p>
@@ -303,14 +306,12 @@ Dart 2.14 で追加されました。</p>
   T? get value =&gt; _value;  
   
   void updateValue(T? value) {  
-    if (_value != null) {  
-      return;  
+    _timer?.cancel();  
+    if (value != null) {  
+      _timer = Timer(const Duration(seconds: 30), () =&gt; _value = null);  
     }  
   
     _value = value;  
-  
-    _timer?.cancel();  
-    _timer = Timer(const Duration(seconds: 30), () =&gt; _value = null);  
   }  
 }  
 </code></pre>
@@ -353,7 +354,7 @@ expect(value, ...);
 関連する issue ページは <a href="https://github.com/dart-lang/fake_async/issues/24" target="_blank" rel="noopener">こちら</a> です。</p>
 <h4 id="%E9%9B%A3%E7%82%B9%201">難点 1</h4>
 <p>次のようにすると <code>expect()</code> の matcher が何であれ常に成功扱いになってしまいます。<br>
-await を使ったことではなく <code>fakeAsync()</code> のコールバックを async にすることで起こるようです。</p>
+await を使うことではなく <code>fakeAsync()</code> のコールバックを async にすることで起こるようです。</p>
 <pre><code class="language-dart">test('...', () {  
   fakeAsync((async) async {  
     final result = await timeConsumingFunc();  
@@ -447,7 +448,7 @@ fakeAsync((async) {
 });  
 </code></pre>
 <p>Clock をアプリなどのコードで使っておけば日時関連のテストがしやすくなります。<br>
-<a href="https://pub.dev/documentation/clock/latest/clock/Clock-class.html" target="_blank" rel="noopener">Clock クラス</a> には <code>days.ago()</code>、<code>daysFromNow()</code> などのメソッドもあって、現在を基準とした過去/未来の日時を取得できます。</p>
+<a href="https://pub.dev/documentation/clock/latest/clock/Clock-class.html" target="_blank" rel="noopener">Clock クラス</a> には <code>days.ago()</code>、<code>daysFromNow()</code> などのメソッドもあって、現在を基準とした時間の隔たりを指定することで過去/未来の日時を取得できます。</p>
 <h3 id="%E6%97%A5%E6%99%82%E3%82%92%E5%A4%89%E3%81%88%E3%82%8B%E4%BE%BF%E5%88%A9%E3%81%AA%E6%96%B9%E6%B3%95">日時を変える便利な方法</h3>
 <h4 id="%E5%88%9D%E6%9C%9F%E5%80%A4%E3%82%92%E8%A8%AD%E5%AE%9A">初期値を設定</h4>
 <p><code>fakeAsync()</code> の <code>initialTime</code> で初期値を設定できます。</p>
@@ -495,7 +496,7 @@ Clock も使えます。</p>
   
 test(  
   '...',  
-  () =&gt; binding.runTest(() async { ... },  
+  () =&gt; binding.runTest(() async { ... }, ...),  
   ...,  
 });  
 </code></pre></details>
