@@ -21,7 +21,7 @@ gtag('config', 'G-8T92E4QR06');
 </blockquote>
 <p>数十億の場所で使われている SQLite の安定性は素晴らしいですね。<br>
 間違いがあってはならない旅客機の中にも。</p>
-<p>私は Flutter でアプリを作るときには SQLite を使ったり別のものを使ったりしていましたが、「もう全部 SQLite でいいんじゃないか」と思うようになりました。</p>
+<p>私は Flutter でアプリを作るときには SQLite を使ったり別のものを使ってみたりしていましたが、「もう全部 SQLite でいいんじゃないか」と思うようになりました。</p>
 <p>※Dart では <a href="https://pub.dev/packages/drift" target="_blank" rel="noopener">Drift</a> が便利です。</p>
 <h2 id="PostgreSQL">PostgreSQL</h2>
 <blockquote>
@@ -30,10 +30,10 @@ gtag('config', 'G-8T92E4QR06');
 <p>常に正しい Postgres…。優等生なんですね。</p>
 <p>SQLite もその後に上記のとおりデバッグが行われてエラーがなくなったということで、今は同等の堅牢性があるのだと思います。</p>
 <h1 id="%E8%A8%AD%E8%A8%88%E9%9D%A2">設計面</h1>
-<p>ドキュメント指向の DB をここ一年半ほど使い、RDB より設計が難しいと思いました。<br>
-DB と料金の両方の都合ですが、読み書きを抑える設計が必要で、そのための非正規化が面倒でした。<br>
+<p>ドキュメント指向の DB をここ一年半ほど使い、RDB より設計が難しく思いました。<br>
+DB の仕様と料金の都合により、読み書きを抑える設計と非正規化が必要で、大変面倒でした。<br>
 この苦労の多い業務経験により、RDB の良さをより認識できました。</p>
-<p>ドキュメント指向ではリレーションによって既存データを組み合わせることができないため、想定していなかったユースケースが後で出てくると対応できなくて辛い思いをしそうですが、どうするのでしょう。</p>
+<p>非正規化済みの既存データを結合して取得できない NoSQL では、当初に想定していなかった機能を後で追加することになったときに辛い思いをしそうですが、どうやって対応するのでしょう。</p>
 <h1 id="%E4%BD%8E%E4%BE%A1%E6%A0%BC%E3%81%AA%20RDB">低価格な RDB</h1>
 <p>以前は高いサービスしかなくて、費用を気にして自分でサーバを立てると、そのメンテナンスという別のコストが生じていました。</p>
 <p>それがここ数年で変わってきて、安価なサービスが現れています。</p>
@@ -43,7 +43,7 @@ DB と料金の両方の都合ですが、読み書きを抑える設計が必�
 <li><a href="https://planetscale.com/" target="_blank" rel="noopener">PlanetScale</a></li>
 <li>など...</li>
 </ul>
-<p>例えば Supabase では、PostgreSQL が使えて Auth / リアルタイム DB / Storage / Edge Functions なども込みで 25 米ドルだけです。<br>
+<p>例えば Supabase では、PostgreSQL が使えて Auth / リアルタイム DB / Storage / Edge Functions など込みでたったの 25 米ドルです。<br>
 一部は従量制ですが、DB では外向きの通信が月に 50 GB を超えなければ追加料金は発生しません。<br>
 無料のプロジェクトは二つまでで、停止すればさらに作れます。</p>
 <p>個人開発のアプリの一部は開発時にこのようなサービスがなかったので VPS を利用しました。<br>
@@ -65,12 +65,12 @@ Fly.io の後ろ盾があるツールということで、今後も期待でき�
 Litestream と違って read replica が可能になるものだと思われます。</p>
 <h2 id="CloudFlare%20D1">CloudFlare D1</h2>
 <p><a href="https://blog.cloudflare.com/ja-jp/introducing-d1-ja-jp/" target="_blank" rel="noopener">https://blog.cloudflare.com/ja-jp/introducing-d1-ja-jp/</a></p>
-<p>これはクラウドのサービスなので上の「<a href="#%E4%BD%8E%E4%BE%A1%E6%A0%BC%E3%81%AA%20RDB">低価格な RDB</a>」に該当しますが、SQLite なのでこちらに含めました。</p>
-<p>CDN のエッジにデプロイされるというのがとても新しいです。</p>
+<p>クラウドのサービスなので上の「<a href="#%E4%BD%8E%E4%BE%A1%E6%A0%BC%E3%81%AA%20RDB">低価格な RDB</a>」に該当しますが、SQLite なので別記としました。<br>
+CDN のエッジにデプロイされるというのがとても新しいです。</p>
 <h2 id="PocketBase">PocketBase</h2>
 <p><a href="https://pocketbase.io/" target="_blank" rel="noopener">https://pocketbase.io/</a></p>
 <p>Supabase に似ているけれど DB は Postgres ではなく SQLite です。<br>
-自分でホストする必要がありますが、シングルバイナリになのでデプロイが非常に簡単です。</p>
+自分でホストしないといけませんが、デプロイに限って言えばシングルバイナリで非常に簡単です。</p>
 <p>余談ですが、Litestream も LiteFS も PocketBase も Go 製です。<br>
 Go はサーバで動かすツールに向いていていいですね。</p>
 <p>ハンズオンの記事を書きましたので、気になる方はどうぞ。</p>

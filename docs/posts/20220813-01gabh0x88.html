@@ -42,8 +42,9 @@ gtag('config', 'G-8T92E4QR06');
 次のスクショは Windows の場合です。</p>
 <p><img src="https://mxfyaoprdbheocgwuqnv.supabase.co/storage/v1/object/public/blog-images/adad99b13e754af012caee01.jpg" alt="PocketBase の起動" loading="lazy"></p>
 <p>書かれているとおり、Admin UI の URL は <code>https://localhost:8090/_/</code> です。<br>
-初めてなら管理用アカウントの作成画面が表示されるので作成しましょう。<br>
-自分でホストするサーバなので、メールアドレス等の保存先はたぶんローカルだと思います。</p>
+初めてなら管理用アカウントを画面上で作成しましょう。<br>
+メールアドレス等のアカウント情報の保存先は SQLite 内です。<br>
+気になる人は SQLite を扱えるクライアントツールなどで覗いてみてください。</p>
 <p>準備は以上です。<br>
 同種のツールでこんなにも簡単に導入できるものがかつてあったでしょうか！<br>
 Docker もいらず、あまりに手軽なので、もうこの時点で虜になりそうです。</p>
@@ -57,8 +58,8 @@ Docker もいらず、あまりに手軽なので、もうこの時点で虜に�
 <p><img src="https://mxfyaoprdbheocgwuqnv.supabase.co/storage/v1/object/public/blog-images/9f8628a740b1bdd233465745.jpg" alt="ユーザ一覧" loading="lazy"></p>
 <p>アバターを設定できる点もいいですね。<br>
 アプリで使うアバターの機能がこれに依存すると、その機能が存在しない別サービスに移行するときに困るかもしれませんが。</p>
-<p>※でたらめなメールアドレスを設定する場合、万一実在すると確認メールが届いて迷惑になるので、「Send verification email」はオフにするのがいいと思います。</p>
-<p>※プロフィールやカラムのデータに日本語は使えますが、Enter キーで保存するようになっているようで、変換確定のための Enter でも保存して閉じられてしまいます。今後の改善に期待…。</p>
+<p>※でたらめなメールアドレスで試すときにはご注意ください。万一実在すると確認メールが届いて迷惑になるので、「Send verification email」をオフにしましょう。</p>
+<p>※プロフィールやカラムのデータに日本語は使えます<s>が、Enter キーで保存するようになっているようで、変換確定のための Enter でも保存して閉じられてしまいます。今後の改善に期待…</s>。（改善されていました）</p>
 <h2 id="Dart%20%E3%81%A7%E3%83%A6%E3%83%BC%E3%82%B6%E8%AA%8D%E8%A8%BC">Dart でユーザ認証</h2>
 <p>設定したメールアドレスとパスワードでログインしてみます。</p>
 <pre><code class="language-dart">import 'package:pocketbase/pocketbase.dart';  
@@ -86,7 +87,7 @@ Future&lt;void&gt; main() async {
 他のメソッドでも同じ傾向なので、誰かが提案して改善を促すのが良さそうです。</p>
 <h1 id="%E3%82%B3%E3%83%AC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3">コレクション</h1>
 <p>PocketBase ではデータベースのテーブルは Collection、その中のカラムは Field と呼ばれています。</p>
-<p>ToDo アプリを作る想定でコレクションを「tasks」という名前で作ります。</p>
+<p>ここでは ToDo アプリを作る想定でコレクションを「tasks」という名前で作ります。</p>
 <h2 id="%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89">フィールド</h2>
 <p>フィールドは二つだけにします。<br>
 その他に自動的に <code>id</code>、<code>created</code>、<code>updated</code> が作られます。</p>
@@ -109,13 +110,14 @@ PocketBase のデータベースは SQLite で、調べると SQLite 3.9 から�
 <p>さらに、<code>Relation</code> と <code>User</code> という型もあります。</p>
 <h3 id="Relation%20%E5%9E%8B">Relation 型</h3>
 <p>「TYPE」を <code>Relation</code> にすると、コレクションを選択するプルダウンが現れます。<br>
-試していませんが、ここでコレクション同士の関係を設定するだけで SQL の JOIN が実現できるのかなと思います。</p>
-<p>リレーションを型として設定するのはやや違和感がありますが、SQL に不慣れな人にとっては SQL を意識せずに使えて良いのかもしれません。</p>
+想像ですが、内部的には外部キーの設定なのかなと思いました。<br>
+SQL に不慣れな人にとっては SQL を意識せずに使えて良いのかもしれません。</p>
 <p><code>ON DELETE CASCATE</code> のように他方のレコードが削除されたときに一緒に消す「DELETE RECORD ON RELATION DELETE」の設定も可能です。</p>
 <h3 id="User%20%E5%9E%8B">User 型</h3>
 <p>名前のとおりユーザ情報の型ですが、この設定の時点ではどんな値が入るのかわかりませんでした。<br>
 使っているうちにわかったので、後で説明します。</p>
-<p>これも Relation の削除設定に似た「DELETE RECORD ON USER DELETE」のオプションがあります。</p>
+<p>これも Relation の削除設定に似た「DELETE RECORD ON USER DELETE」のオプションがあります。<br>
+内部的には同じなのかもしれません。</p>
 <h1 id="API%20%E3%83%AB%E3%83%BC%E3%83%AB">API ルール</h1>
 <p>Supabase/PostgreSQL の RLS（Row Level Security）のポリシー、Firestore のセキュリティルールに相当するものです。</p>
 <p>Supabase では RLS があるからこそ可能なわけですが、そういったものが存在しない SQLite で同様の機能を実現しているのは偉業だなと思います。</p>
@@ -154,8 +156,10 @@ print(record.data); // {task: タスク1, user: 3DKCttAcBXBaoE4}
 <p>先ほど設定した API ルールに反するので、阻止されて例外（<code>ClientException</code>）が発生します。</p>
 <pre><code>ClientException: {url: http://127.0.0.1:8090/api/collections/tasks/records, isAbort: false, statusCode: 400, response: {code: 400, message: Failed to create record., data: {}}, originalError: null}  
 </code></pre>
-<p>ルール違反であることがもう少しわかりやすいメッセージだといいのですが…。<br>
+<p>ルール違反であることがメッセージでわからないです…。<br>
 ステータスコードは <code>400</code>（Bad Request）です。</p>
+<p><strong>追記：</strong><br>
+Admin UI 上のログのページを見ると具体的なエラー内容がわかるかもしれません。</p>
 <h3 id="%E5%AD%98%E5%9C%A8%E3%81%97%E3%81%AA%E3%81%84%E3%83%A6%E3%83%BC%E3%82%B6%20ID%20%E3%81%A7%E8%BF%BD%E5%8A%A0">存在しないユーザ ID で追加</h3>
 <p>User 型にしていることでチェックが効くようで、例外が発生します。<br>
 ステータスコードは同じ <code>400</code> ですがメッセージが異なります。</p>
@@ -238,29 +242,27 @@ for (final record in list) {
 <p>別ユーザで実行したときはやはり一件取得や更新のときと同様の例外でした。</p>
 <h1 id="%E5%AE%9F%E7%94%A8">実用</h1>
 <p>ごく基本的な操作しかしていませんが、これで感覚はつかめました。<br>
-単純な ToDo アプリは tasks コレクションを使ってもう作れます。</p>
-<p>あとはリレーションを利用するケースを確認しておきたいところですが、今回はここまでにします。</p>
+単純な ToDo アプリは tasks コレクションを使ってもう作れます。<br>
+あとは Relation 型の扱い方を確認しておきたいところですが、今回はここまでにします。</p>
 <p>実用は…、個人的にはもう少し先です…。<br>
-大勢が試してフィードバックが出て改善された頃がいいですが、気になるところが減ってきた時点で個人開発では使い始めてもいいと思いました。</p>
+v1.0 に達したときが無難ですが、フィードバックがある程度出て改善されてきた時点で個人開発には使い始めてもいいとは思っています。</p>
 <h2 id="PocketBase%20vs%20Supabase">PocketBase vs Supabase</h2>
-<p>費用面を無視できるなら Supabase を選びます。<br>
-PocketBase は自分でサーバを用意して運用しないといけないので、その費用と手間を考えるとどっこいどっこいかもしれません。</p>
-<p>自分でホストするのは Supabase でもできます。<br>
-しかし Supabase では Docker で複数のコンテナを動かす必要があるのに対して PocketBase ではシングルバイナリになっているため手軽であり、バックアップ/リカバリも SQLite のほうが手間が少ないと思います。</p>
+<p>PocketBase とクラウド の Supabase のどちらかを選ぶなら、費用面を無視できるなら Supabase を選びます。</p>
+<p>自分でホストする方式に限れば、Supabase では Docker で複数のコンテナを動かす必要があるのに対して PocketBase ではシングルバイナリになっていて手軽であり、バックアップ/リカバリも SQLite のほうが手間が少ないです。</p>
 <ul>
-<li>たくさんのアプリを作る場合
+<li>アプリを多数作る場合
 <ul>
 <li>PocketBase</li>
 <li>将来的にクラウドの Supabase に移行しそうなら Supabase を自分でホスト</li>
 </ul>
 </li>
-<li>たくさん作らない場合
+<li>多数作らない場合
 <ul>
 <li>Supabase クラウド</li>
 </ul>
 </li>
 </ul>
-<p>PocketBase は SQL らしさが薄いので、SQL が苦手な人は Supabase より入りやすい気がします。</p>
+<p>PocketBase は SQL らしさが薄いので、SQL が苦手な人は Supabase より入りやすそうです。</p>
 <h2 id="%E4%BA%8C%E9%80%9A%E3%82%8A%E3%81%AE%E4%BD%BF%E3%81%84%E6%96%B9">二通りの使い方</h2>
 <ul>
 <li>a) Supabase や Firebase のようにフロントエンドから DB に直接アクセスする</li>
@@ -268,12 +270,12 @@ PocketBase は自分でサーバを用意して運用しないといけないの
 </ul>
 <p>a は便利ですが、ルールをきっちりと設定して、そのためのテストも書いておかないと危険です。<br>
 また、アプリから直に利用するのでスキーマを変更したいときに困りそうです。</p>
-<p>PocketBase はサーバレスではないので、どうせ自分でサーバにデプロイするなら b のほうが良い気もします。<br>
+<p>PocketBase はサーバレスではなくて、どうせ自分でホストするなら b が良い気もします。<br>
 バックエンドに処理をまとめたほうがクライアントがシンプルになるというのもあります。</p>
 <p>でも、フロントエンドな人にはきっと a のほうが魅力ですね。</p>
-<p>迷うところですが、選択肢が与えられているのは良いことなので、運用方法などを考えながら前向きに迷いましょう。</p>
+<p>迷うところですが、選択肢があるのは嬉しいことなので、運用方法などを考えながら前向きに迷いましょう。</p>
 <h1 id="%E3%81%BE%E3%81%A8%E3%82%81">まとめ</h1>
-<p>PocketBase には可能性が感じられ、期待できます。<br>
+<p>PocketBase には可能性が感じられて期待できます。<br>
 こんなに素晴らしいものが OSS として提供されているのはありがたいですね。<br>
 しばらく見守りたいと思います。</p>
 </article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20220813-01gabh0x88&amp;text=PocketBase%E3%83%8F%E3%83%B3%E3%82%BA%E3%82%AA%E3%83%B3%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
