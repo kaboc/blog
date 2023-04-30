@@ -1,0 +1,293 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta name="description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にしていくことにしました。 ※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。 この記事は"><meta name="keywords" content="Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta property="og:description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にしていくことにしました。 ※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。 この記事は"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-8T92E4QR06');
+</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Dart 3のリリースに備えて - sealed型と進化したswitch</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart">Dart</a></li></ul><time datetime="2023-04-30T08:38:54.249867Z">2023-04-30</time></section><article class="markdown-body"><p>Dart 3 では多くの新機能が加わって進化しています。<br>
+その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にしていくことにしました。</p>
+<p>※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。</p>
+<p>この記事は <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/sealed-types/feature-specification.md" target="_blank" rel="noopener">sealed 型の仕様書</a> をベースにし、他のいくつかのページのコード例も取り入れています。<br>
+コード例は少し改変しています。</p>
+<h1 id="sealed%20%E5%9E%8B%E3%81%A7%E5%8F%AF%E8%83%BD%E3%81%AB%E3%81%AA%E3%82%8B%E3%81%93%E3%81%A8">sealed 型で可能になること</h1>
+<p><code>sealed</code> を付けると、サブタイプを利用するときに網羅性をチェックできるようになります。</p>
+<h2 id="%E5%BE%93%E6%9D%A5%E3%81%AE%E6%96%B9%E6%B3%95">従来の方法</h2>
+<p>まず今までの書き方を見ましょう。<br>
+<a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#algebraic-datatypes" target="_blank" rel="noopener">別のページ</a> にあった例を持ってきました。</p>
+<pre><code class="language-dart">abstract class Shape {  
+  double calculateArea();  
+}  
+  
+class Square implements Shape {  
+  final double length;  
+  Square(this.length);  
+  
+  double calculateArea() =&gt; length * length;  
+}  
+  
+class Circle implements Shape {  
+  final double radius;  
+  Circle(this.radius);  
+  
+  double calculateArea() =&gt; math.pi * radius * radius;  
+}  
+</code></pre>
+<p><code>Shape</code> のサブタイプである <code>Square</code> と <code>Circle</code> のそれぞれで <code>calculateArea()</code> を実装しています。<br>
+これはこれでいいのですが、実装が各クラスに分散して一ヶ所で管理できません。</p>
+<p>下記のように Shape 側でサブタイプの分岐を行うこともできますが、記述が少し長くなります。<br>
+また、すべてを網羅している保証はないので、漏れたときのために throw する等の対策が必要です。</p>
+<pre><code class="language-dart">abstract class Shape {  
+  double calculateArea() {  
+    final self = this;  
+    if (self is Square) {  
+      return self.length + self.length;  
+    }  
+    if (self is Circle) {  
+      return math.pi * self.radius * self.radius;  
+    }  
+    throw ArgumentError("Unexpected shape.");  
+  }  
+}  
+  
+class Square extends Shape {  
+  final double length;  
+  Square(this.length);  
+}  
+  
+class Circle extends Shape {  
+  final double radius;  
+  Circle(this.radius);  
+}  
+</code></pre>
+<h2 id="sealed%20%E5%9E%8B%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%9F%E6%96%B9%E6%B3%95">sealed 型を使った方法</h2>
+<p>クラスの定義に <code>sealed</code> という修飾子を付けると、<code>switch</code> などでサブタイプの網羅をチェックできるようになるため、漏れがあればコンパイルエラーになって気づくことができます。</p>
+<pre><code class="language-dart">sealed class Shape {  
+  double calculateArea() {  
+    final self = this;  
+    switch (self) {  
+      case Square():  
+        return self.length * self.length;  
+      case Circle():  
+        return math.pi * self.radius * self.radius;  
+    }  
+  }  
+}  
+  
+class Square extends Shape {  
+  final double length;  
+  Square(this.length);  
+}  
+  
+class Circle extends Shape {  
+  final double radius;  
+  Circle(this.radius);  
+}  
+</code></pre>
+<h1 id="switch%20%E3%81%AE%E9%80%B2%E5%8C%96">switch の進化</h1>
+<p>sealed 型が導入されたことは Dart の一つの進化ですが、以前から存在する switch の進化も目覚ましいです。<br>
+パターンマッチングが行いやすいように改善されています。</p>
+<h2 id="patterns">patterns</h2>
+<p>これまでは <code>case</code> で指定するのは定数でなければなりませんでしたが、Dart 3 では様々な値（パターン）でマッチングを行うことが可能になりました。<br>
+パターンは <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#patterns" target="_blank" rel="noopener">仕様書</a> によると従来の「式」と「文」に次ぐ第三の分類です。</p>
+<blockquote>
+<p>"Expression" and "statement" are both syntactic categories in the grammar. Patterns form a third category. Like expressions and statements, patterns are often composed of other subpatterns.</p>
+</blockquote>
+<p>かなり複雑なのでこの記事には詳しく書きません。<br>
+今までのような定数だけでなく（式と異なるけれど式のような）複雑な表現でパターンを示すことができると捉えておけばいいのではないかと思います。</p>
+<p>先ほどの sealed 型を使った例では <code>Square()</code> と <code>Circle()</code> は定数ではないのに <code>case</code> で使用できています。</p>
+<h3 id="destructuring">destructuring</h3>
+<p>マッチングを行いながら destructure して値を取り出すことまでできるようになっています。</p>
+<pre><code class="language-dart">double calculateArea() {  
+  switch (self) {  
+    case Square(length: final l):  
+      return l * l;  
+    case Circle(radius: final r):  
+      return math.pi * r * r;  
+  }  
+}  
+</code></pre>
+<p>この例は様々な patterns のうちの <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#object-pattern" target="_blank" rel="noopener">object pattern</a> です。</p>
+<blockquote>
+<p>An object pattern matches values of a given named type and then extracts values from it by calling getters on the value. Object patterns let users destructure data from arbitrary objects using the getters the object's class already exposes.</p>
+</blockquote>
+<h2 id="switch%20%E5%BC%8F">switch 式</h2>
+<p>switch を式として使うこともできるようになりました。<br>
+式では case のキーワードは使わずに <code>パターン =&gt; 返す値</code> の形の簡潔な記述になります。<br>
+式として使わないときはこれまで通りの case を使った書き方です。</p>
+<pre><code class="language-dart">double calculateArea() {  
+  return switch (this) {  
+    Square(length: final l) =&gt; l * l,  
+    Circle(radius: final r) =&gt; math.pi * r * r,  
+  };  
+}  
+</code></pre>
+<p>switch 文を式に変えるのは、IntelliJ IDEA では quick fix でできることを確認しました。<br>
+VS Code では確認していません。</p>
+<h2 id="break%20%E3%81%8C%E4%B8%8D%E8%A6%81%E3%81%AB">break が不要に</h2>
+<p>sealed 型と直接的には関係しない余談ですが、switch の話になったのでついでに書きます。<br>
+Dart 3 では switch の case は fall through しなくなったため <code>break;</code> と書くのを省略できます。</p>
+<pre><code class="language-dart">sealed class Animals {  
+  void speak() {  
+    switch (this) {  
+      case Cat():  
+        print('Mew');  
+      case Dog():  
+        print('Bowwow');  
+    }  
+  }  
+}  
+  
+class Cat extends Animals {}  
+class Dog extends Animals {}  
+</code></pre>
+<pre><code class="language-dart">void main() {  
+  Cat().speak(); // Mew  
+}  
+</code></pre>
+<p>一見すると互換性がなくなって困りそうですが、何の処理もない case は変わらず fall through するので、大抵の場合は影響がないと思います。</p>
+<pre><code class="language-dart">void speak() {  
+  switch (this) {  
+    case Cat():  
+    case Dog():  
+      print('Bowwow'); // CatでもDogでもここに到達  
+  }  
+}  
+</code></pre>
+<pre><code class="language-dart">void main() {  
+  Cat().speak(); // Bowwow  
+}  
+</code></pre>
+<p><code>break</code> の記述はオプショナルですが、<a href="https://dart-lang.github.io/linter/lints/unnecessary_breaks.html" target="_blank" rel="noopener">unnecessary_breaks</a> の lint ルールを有効にすると不要な場合に警告されるようになります。</p>
+<p>本記事のこの先のコード例でも <code>break</code> は使われません。</p>
+<h1 id="sealed%20%E5%9E%8B%E3%81%AE%E8%A9%B3%E7%B4%B0">sealed 型の詳細</h1>
+<p>さて余談が多くなりましたが、sealed 型の詳細を見ましょう。</p>
+<h2 id="%E5%88%B6%E9%99%90">制限</h2>
+<ul>
+<li>暗黙的に抽象クラスになるのでインスタンスを直接生成できない</li>
+<li>直接のサブタイプは同じ library 内で定義しなければならない</li>
+</ul>
+<p>これらの制限によって網羅の把握が可能になったわけです。</p>
+<h3 id="%E5%90%8C%E3%81%98%20library%20%E3%81%A8%E3%81%AF">同じ library とは</h3>
+<p>Dart では library は基本的に一つのファイルのことです。<br>
+<code>part</code> で分けている場合は分けたファイルも同じ library になります。<br>
+また、検討が進んでいる <a href="https://github.com/dart-lang/language/blob/main/working/augmentation-libraries/feature-specification.md" target="_blank" rel="noopener">Augmentation Libraries</a> が実際に導入されれば、それによって分割した部分も同一 library 内として扱われます。</p>
+<p><code>sealed</code> を付けたクラスが定義された library 以外でそれを継承、実装しようとするとコンパイルエラーになります。</p>
+<h4 id="library%20%E3%81%8C%E7%95%B0%E3%81%AA%E3%82%8B%E4%BE%8B">library が異なる例</h4>
+<p>library1.dart</p>
+<pre><code class="language-dart">sealed class Either {}  
+</code></pre>
+<p>library2.dart</p>
+<pre><code class="language-dart">import 'library1.dart';  
+  
+class Left extends Either {} // The class 'Either' can't be extended, implemented, or mixed in outside of its library because it's a sealed class.  
+</code></pre>
+<h4 id="library%20%E3%82%92%20part%20%E3%81%A7%E5%88%86%E3%81%91%E3%81%9F%E5%A0%B4%E5%90%88">library を part で分けた場合</h4>
+<p>library1.dart</p>
+<pre><code class="language-dart">part 'library2.dart';  
+  
+sealed class Either {}  
+</code></pre>
+<p>library2.dart</p>
+<pre><code class="language-dart">part of 'library1.dart';  
+  
+class Left extends Either {}  
+</code></pre>
+<p>これは同一ライブラリになるので OK です。</p>
+<h3 id="%E7%9B%B4%E6%8E%A5%E3%81%AE%E3%82%B5%E3%83%96%E3%82%BF%E3%82%A4%E3%83%97%E3%81%A8%E3%81%AF">直接のサブタイプとは</h3>
+<pre><code class="language-dart">sealed class Either {}  
+  
+class Left extends Either {}  
+class Right extends Either {}  
+</code></pre>
+<p><code>Left</code> と <code>Right</code> は sealed 型である <code>Either</code> を直に継承しているので直接のサブタイプです。<br>
+switch でマッチングのパターンとして <code>Left()</code> と <code>Right()</code> を書けば網羅していることになります。</p>
+<pre><code class="language-dart">String leftOrRight(Either either) {  
+  return switch (either) {  
+    Left() =&gt; 'Left',  
+    Right() =&gt; 'Right',  
+  };  
+}  
+</code></pre>
+<p>もし Left を継承したクラスを作って switch で <code>Left()</code> の代わりに使うと、Either に対して網羅していないことになります。</p>
+<pre><code class="language-dart">class LeftOut extends Left {}  
+</code></pre>
+<pre><code class="language-dart">return switch (either) { // The type 'Either' is not exhaustively matched by the switch cases since it doesn't match 'Left()'.  
+  LeftOut() =&gt; 'Left',  
+  Right() =&gt; 'Right',  
+};  
+</code></pre>
+<p>つまり、網羅性のチェックを機能させるには sealed 型を直に継承/実装した型を使ったパターンでなければならないということです。</p>
+<h2 id="%E9%9A%8E%E5%B1%A4%E6%A7%8B%E9%80%A0">階層構造</h2>
+<p>sealed 型の <code>Either</code> の子である <code>Left</code> も sealed 型にすることができます。<br>
+そうすると <code>LeftOut</code> も sealed 型の直接のサブタイプになります。</p>
+<pre><code class="language-dart">sealed class Either {}  
+  
+sealed class Left extends Either {}  
+class Right extends Either {}  
+  
+class LeftOut extends Left {}  
+</code></pre>
+<p>階層構造は次のようになり、<code>Either</code> と <code>Left</code> が sealed 型なので <code>LeftOut</code> と <code>Right</code> によるパターンマッチングでも網羅したことになります。</p>
+<pre><code class="language-text">Either --+-- Left ----- LeftOut  
+         |  
+         +-- Right  
+</code></pre>
+<p>この例はあまり意味がなくてわかりにくいので、<a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/sealed-types/feature-specification.md#sealed-subtypes" target="_blank" rel="noopener">sealed の仕様書に書かれている例</a> を紹介します。</p>
+<pre><code class="language-dart">sealed class UnitedKingdom {}  
+  
+class NorthernIreland extends UnitedKingdom {}  
+sealed class GreatBritain extends UnitedKingdom {}  
+  
+class England extends GreatBritain {}  
+class Scotland extends GreatBritain {}  
+class Wales extends GreatBritain {}  
+</code></pre>
+<p>階層構造：</p>
+<pre><code class="language-text">UnitedKingdom --+-- NorthernIreland  
+                |  
+                +-- GreatBritain --+-- England  
+                                   |  
+                                   +-- Scotland  
+                                   |  
+                                   +-- Wales  
+</code></pre>
+<p><code>UnitedKingdom</code> と <code>GreatBritain</code> が sealed 型なので、<code>UnitedKingdom</code> の子である <code>NorthernIreland</code> と <code>GreatBritain</code> だけでなく <code>GreatBritain</code> の子である <code>England</code>、<code>Scotland</code>、<code>Wales</code> を組み合わせたパターンでも網羅性チェックが効きます。</p>
+<pre><code class="language-dart">String name1(UnitedKingdom uk) {  
+  return switch (uk) {  
+    NorthernIreland() =&gt; 'Northern Ireland',  
+    GreatBritain() =&gt; 'Great Britain'  
+  };  
+}  
+</code></pre>
+<pre><code class="language-dart">String name2(UnitedKingdom uk) {  
+  return switch (uk) {  
+    NorthernIreland() =&gt; 'Northern Ireland',  
+    England() =&gt; 'England',  
+    Scotland() =&gt; 'Scotland',  
+    Wales() =&gt; 'Wales',  
+  };  
+}  
+</code></pre>
+<pre><code class="language-dart">String name3(GreatBritain britain) {  
+  return switch (britain) {  
+    England() =&gt; 'England',  
+    Scotland() =&gt; 'Scotland',  
+    Wales() =&gt; 'Wales',  
+  };  
+}  
+</code></pre>
+<h1 id="%E3%82%AF%E3%83%A9%E3%82%B9%E4%BF%AE%E9%A3%BE%E5%AD%90">クラス修飾子</h1>
+<p><a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/class-modifiers/feature-specification.md" target="_blank" rel="noopener">新しいクラス修飾子</a> は <code>sealed</code> の他にもいくつかあります。<br>
+仕様書の <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/class-modifiers/feature-specification.md#syntax" target="_blank" rel="noopener">Syntax</a> のところにある <code>sealed</code> も含めた修飾子のわかりやすい表をそのまま貼ります。</p>
+<table><thead><tr><th>Declaration</th><th>Construct?</th><th>Extend?</th><th>Implement?</th><th>Mix in?</th><th>Exhaustive?</th></tr></thead><tbody><tr><td><code>class</code></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td><td>No</td></tr><tr><td><code>base class</code></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td><td>No</td><td>No</td></tr><tr><td><code>interface class</code></td><td><strong>Yes</strong></td><td>No</td><td><strong>Yes</strong></td><td>No</td><td>No</td></tr><tr><td><code>final class</code></td><td><strong>Yes</strong></td><td>No</td><td>No</td><td>No</td><td>No</td></tr><tr><td><code>sealed class</code></td><td>No</td><td>No</td><td>No</td><td>No</td><td><strong>Yes</strong></td></tr><tr><td><code>abstract class</code></td><td>No</td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td><td>No</td></tr><tr><td><code>abstract base class</code></td><td>No</td><td><strong>Yes</strong></td><td>No</td><td>No</td><td>No</td></tr><tr><td><code>abstract interface class</code></td><td>No</td><td>No</td><td><strong>Yes</strong></td><td>No</td><td>No</td></tr><tr><td><code>abstract final class</code></td><td>No</td><td>No</td><td>No</td><td>No</td><td>No</td></tr><tr><td><code>mixin class</code></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td></tr><tr><td><code>base mixin class</code></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td><td><strong>Yes</strong></td><td>No</td></tr><tr><td><code>abstract mixin class</code></td><td>No</td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td></tr><tr><td><code>abstract base mixin class</code></td><td>No</td><td><strong>Yes</strong></td><td>No</td><td><strong>Yes</strong></td><td>No</td></tr><tr><td><code>mixin</code></td><td>No</td><td>No</td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td></tr><tr><td><code>base mixin</code></td><td>No</td><td>No</td><td>No</td><td><strong>Yes</strong></td><td>No</td></tr></tbody></table>
+<p><code>sealed class</code> は Construct、Extend、Implement、Mix in が No になっていて Exhaustive だけが Yes です。<br>
+Extend 等が No なのが変に思えますが、他の修飾子の組み合わせに関して次のように書かれているので、その意味でできないということかもしれません。</p>
+<blockquote>
+<p><code>sealed</code> types already cannot be mixed in, extended or implemented from another library.</p>
+</blockquote>
+<h1 id="%E5%9F%BA%E6%9C%AC%E3%81%AE%E5%9E%8B%E3%82%82%20sealed%EF%BC%9F">基本の型も sealed？</h1>
+<p><code>bool</code>, <code>double</code>, <code>int</code>, <code>Null</code>, <code>num</code>, <code>String</code> といった dart:core で定義されている型はもともと特殊なケースの制約によって sealed と同様の挙動になっていたようです。</p>
+<p>sealed 型の導入によってそのような特別な扱いをせずに sealed 型として取り扱うことができるようになるそうですが、ソースコードを見るとまだほとんどそうなっていなくて <a href="https://github.com/dart-lang/sdk/blob/c4cb74cb9dd25fccd19849dec62f88366a7b8409/sdk/lib/core/num.dart#L17" target="_blank" rel="noopener">num</a> にのみ sealed が付いていました。</p>
+<pre><code class="language-dart">sealed class num implements Comparable&lt;num&gt; {  
+</code></pre>
+</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20230430-01gz8n170g&amp;text=Dart%203%E3%81%AE%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E3%81%AB%E5%82%99%E3%81%88%E3%81%A6%20-%20sealed%E5%9E%8B%E3%81%A8%E9%80%B2%E5%8C%96%E3%81%97%E3%81%9Fswitch%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
