@@ -164,7 +164,7 @@ footer small {
 
   main .markdown-body pre {
     width: 100vw;
-    margin: 0 calc(50% - 50vw);
+    margin: 0 calc(50% - 50vw) 16px;
     border-radius: initial;
   }
 
