@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>使う引数&#47;プロパティが用途によって変わるクラス | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20230116-01gpwsvv42"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="使う引数&#47;プロパティが用途によって変わるクラス | Kabolog"><meta name="description" content="実現したいこと 次の三つのプロパティを持つ Todo クラスを Dart で作るとします。 content ToDo の内容 dueAt 期限 任意だが、notify が有効なら必須 ← これ notify 期限前に通知を送るかどうか 期限がなければ使われない 他の例 いくつかの引数のうち一つだけを排他的に必須にしたいこともあります。 例えば Flutter"><meta name="keywords" content="Dart,小ネタ"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20230116-01gpwsvv42"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="使う引数&#47;プロパティが用途によって変わるクラス | Kabolog"><meta property="og:description" content="実現したいこと 次の三つのプロパティを持つ Todo クラスを Dart で作るとします。 content ToDo の内容 dueAt 期限 任意だが、notify が有効なら必須 ← これ notify 期限前に通知を送るかどうか 期限がなければ使われない 他の例 いくつかの引数のうち一つだけを排他的に必須にしたいこともあります。 例えば Flutter"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>使う引数&#47;プロパティが用途によって変わるクラス | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20230116-01gpwsvv42"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202305080935"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="使う引数&#47;プロパティが用途によって変わるクラス | Kabolog"><meta name="description" content="実現したいこと 次の三つのプロパティを持つ Todo クラスを Dart で作るとします。 content ToDo の内容 dueAt 期限 任意だが、notify が有効なら必須 ← これ notify 期限前に通知を送るかどうか 期限がなければ使われない 他の例 いくつかの引数のうち一つだけを排他的に必須にしたいこともあります。 例えば Flutter"><meta name="keywords" content="Dart,小ネタ"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20230116-01gpwsvv42"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="使う引数&#47;プロパティが用途によって変わるクラス | Kabolog"><meta property="og:description" content="実現したいこと 次の三つのプロパティを持つ Todo クラスを Dart で作るとします。 content ToDo の内容 dueAt 期限 任意だが、notify が有効なら必須 ← これ notify 期限前に通知を送るかどうか 期限がなければ使われない 他の例 いくつかの引数のうち一つだけを排他的に必須にしたいこともあります。 例えば Flutter"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -80,7 +80,8 @@ gtag('config', 'G-8T92E4QR06');
 </code></pre>
 <p>この行がポイントです。<br>
 <code>dueAt</code> というプロパティの型は nullable な <code>DateTime?</code> ですが、引数では non-nullable な <code>DateTime</code> に限定しています。</p>
-<h3 id="%E3%81%93%E3%81%AE%E6%96%B9%E6%B3%95%E3%81%AE%E8%A6%8B%E3%81%A4%E3%81%91%E3%81%AB%E3%81%8F%E3%81%95">この方法の見つけにくさ</h3><details>  
+<h3 id="%E3%81%93%E3%81%AE%E6%96%B9%E6%B3%95%E3%81%AE%E8%A6%8B%E3%81%A4%E3%81%91%E3%81%AB%E3%81%8F%E3%81%95">この方法の見つけにくさ</h3>
+<details>  
 <summary>余談なので折りたたんでいます（クリックで開閉）</summary>
 <p>この方法は先月の途中まで知らなくて、<code>null</code> が渡されることを下記のような別方法で防ごうとしたときに出る警告について GitHub で報告したときに教わって知りました。</p>
 <pre><code class="language-dart">const Todo.schedule(  
@@ -91,12 +92,15 @@ gtag('config', 'G-8T92E4QR06');
 </code></pre>
 <p><a href="https://dart-lang.github.io/linter/lints/prefer_initializing_formals.html" target="_blank" rel="noopener">prefer_initializing_formals</a> の lint ルールを有効にしていると「Use an initializing formal to assign a parameter to a field.」と警告されます。</p>
 <p><code>dart fix</code> か IDE 上での quick fix によってイニシャライザリストを使わない方法に自動改善できるのですが、そのことに気づいていませんでした。<br>
-上記の方法で型を狭められることがどこにも明記されていないことについて issue が立てられたので、ドキュメントの改善がそのうちあるかもしれません。</p></details>
-<h3 id="Flutter%20SDK%20%E3%81%AE%E3%82%BD%E3%83%BC%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%89%E3%81%A7%E3%81%AF%E3%81%A9%E3%81%86%E3%81%AA%E3%81%A3%E3%81%A6%E3%81%84%E3%82%8B%E3%81%8B">Flutter SDK のソースコードではどうなっているか</h3><details>  
+上記の方法で型を狭められることがどこにも明記されていないことについて issue が立てられたので、ドキュメントの改善がそのうちあるかもしれません。</p>
+</details>
+<h3 id="Flutter%20SDK%20%E3%81%AE%E3%82%BD%E3%83%BC%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%89%E3%81%A7%E3%81%AF%E3%81%A9%E3%81%86%E3%81%AA%E3%81%A3%E3%81%A6%E3%81%84%E3%82%8B%E3%81%8B">Flutter SDK のソースコードではどうなっているか</h3>
+<details>  
 <summary>余談なので折りたたんでいます（クリックで開閉）</summary>
 <p>この記事を書くにあたって Flutter SDK のソースコードで同じ方法が使われていないかと一部を見たのですが、見当たりませんでした。<br>
 それどころか、non-nullable なプロパティに対する引数なのにわざわざ <code>null</code> を防ぐ assertion が行われている箇所が多数あって無駄に思えました（例： <a href="https://github.com/flutter/flutter/blob/1220245b330c94ec573d9f4801e93c5c72908f4f/packages/flutter/lib/src/widgets/basic.dart#L1924-L1931" target="_blank" rel="noopener">Padding クラスの padding</a>）。</p>
-<p>Null safety より前のコードを引きずったまま新しいバージョンで可能になった書き方を反映できていないだけかもしれません。</p></details>
+<p>Null safety より前のコードを引きずったまま新しいバージョンで可能になった書き方を反映できていないだけかもしれません。</p>
+</details>
 <h1 id="%E3%82%AF%E3%83%A9%E3%82%B9%E8%87%AA%E4%BD%93%E3%82%92%E5%88%86%E3%81%91%E3%82%8B">クラス自体を分ける</h1>
 <p>コンストラクタを分けずにクラスを分ける方法も可能です。</p>
 <pre><code class="language-dart">class Todo {  
@@ -138,7 +142,7 @@ class ScheduledTodo extends Todo {
 <pre><code class="language-dart">final todo = Todo.schedule('Buy milk', dueAt: DateTime(2023, 1, 31));  
 final dueAt = todo.dueAt; // nullable  
 </code></pre>
-<p>一方、クラスを分けた場合は <code>DateTime get dueAt =&gt; super.dueAt!;</code> のようにゲッターで override して non-nullable にすることができます。</p>
+<p>一方、クラスを分けた場合は <code>DateTime get dueAt =&gt; super.dueAt!; </code> のようにゲッターで override して non-nullable にすることができます。</p>
 <p>このようなメリットはありますが、やや手間がかかるので私はコンストラクタを分ける方法を主に選択すると思います。<br>
 でも、引数とプロパティを子クラスでのみ non-nullable に変える方法は、タイトルの目的以外でも使いたい機会がありそうです。</p>
 <h2 id="%E6%B3%A8%E6%84%8F">注意</h2>

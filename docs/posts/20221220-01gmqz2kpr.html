@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartの非同期処理の理解を深める（Tips編） | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta name="description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 非同期関連のことばかり書いていると飽きるのでシリーズ最終回とします。 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 20 日目 - D"><meta name="keywords" content="Dart,非同期処理"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta property="og:description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 非同期関連のことばかり書いていると飽きるのでシリーズ最終回とします。 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 20 日目 - D"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartの非同期処理の理解を深める（Tips編） | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202305080935"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta name="description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 非同期関連のことばかり書いていると飽きるのでシリーズ最終回とします。 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 20 日目 - D"><meta name="keywords" content="Dart,非同期処理"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta property="og:description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 非同期関連のことばかり書いていると飽きるのでシリーズ最終回とします。 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 20 日目 - D"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -488,7 +488,8 @@ Clock も使えます。</p>
 <p>なお（深掘りしていないので理由は把握していませんが）<code>testWidgets()</code> では <code>await</code> や <code>completion()</code> が使えます。</p>
 <h3 id="testWidgets()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">testWidgets() の中身</h3>
 <p>ここからは詳細を書いているだけなので折りたたんでおきます。<br>
-コードはかなり簡略化して掲載します。</p><details>  
+コードはかなり簡略化して掲載します。</p>
+<details>  
 <summary>クリックで開く</summary>
 <p><a href="https://api.flutter.dev/flutter/flutter_test/testWidgets.html" target="_blank" rel="noopener">testWidgets()</a> では <code>TestWidgetsFlutterBinding</code> の <code>runTest()</code> が使われています。<br>
 ⇒ <a href="https://github.com/flutter/flutter/blob/9fb1ae839e0a47bd7bb5e2a3c6dd594fa6b0764c/packages/flutter_test/lib/src/widget_tester.dart#L126-L187" target="_blank" rel="noopener">ソースコード</a></p>
@@ -499,8 +500,10 @@ test(
   () =&gt; binding.runTest(() async { ... }, ...),  
   ...,  
 });  
-</code></pre></details>
-<h3 id="runTest()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">runTest() の中身</h3><details>  
+</code></pre>
+</details>
+<h3 id="runTest()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">runTest() の中身</h3>
+<details>  
 <summary>クリックで開く</summary>
 <p><a href="https://api.flutter.dev/flutter/flutter_test/TestWidgetsFlutterBinding/runTest.html" target="_blank" rel="noopener">runTest() のドキュメント</a> より：</p>
 <blockquote>
@@ -521,8 +524,10 @@ return Future&lt;void&gt;.microtask(() async {
   fakeAsync.flushMicrotasks();  
   return resultFuture;  
 });  
-</code></pre></details>
-<h3 id="pump()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">pump() の中身</h3><details>  
+</code></pre>
+</details>
+<h3 id="pump()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">pump() の中身</h3>
+<details>  
 <summary>クリックで開く</summary>
 <p><code>elapse()</code> が使われています。<br>
 ⇒ <a href="https://github.com/flutter/flutter/blob/9fb1ae839e0a47bd7bb5e2a3c6dd594fa6b0764c/packages/flutter_test/lib/src/binding.dart#L1169-L1190" target="_blank" rel="noopener">ソースコード</a></p>
@@ -534,8 +539,10 @@ return Future&lt;void&gt;.microtask(() async {
   _currentFakeAsync!.flushMicrotasks();  
   return Future&lt;void&gt;.value();  
 });  
-</code></pre></details>
-<h3 id="pumpAndSettle()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">pumpAndSettle() の中身</h3><details>  
+</code></pre>
+</details>
+<h3 id="pumpAndSettle()%20%E3%81%AE%E4%B8%AD%E8%BA%AB">pumpAndSettle() の中身</h3>
+<details>  
 <summary>クリックで開く</summary>
 <p><a href="https://api.flutter.dev/flutter/flutter_test/WidgetTester/pumpAndSettle.html" target="_blank" rel="noopener">pumpAndSettle() のドキュメント</a> より：</p>
 <blockquote>
@@ -553,5 +560,6 @@ return Future&lt;void&gt;.microtask(() async {
   } while (binding.hasScheduledFrame);  
   return count;  
 });  
-</code></pre></details>
+</code></pre>
+</details>
 </article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20221220-01gmqz2kpr&amp;text=Dart%E3%81%AE%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%87%A6%E7%90%86%E3%81%AE%E7%90%86%E8%A7%A3%E3%82%92%E6%B7%B1%E3%82%81%E3%82%8B%EF%BC%88Tips%E7%B7%A8%EF%BC%89%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>

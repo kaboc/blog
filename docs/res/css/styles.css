@@ -40,7 +40,7 @@ header {
   height: var(--header-height);
   padding: var(--header-padding-v) 16px;
   color: #fff;
-  background-color: #555;
+  background-color: #444;
   font-weight: bold;
 }
 
@@ -62,7 +62,7 @@ header p #top-social-buttons a {
 }
 
 header p #top-social-buttons a:hover {
-  filter: invert(31%) sepia(55%) saturate(338%) hue-rotate(53deg) brightness(107%) contrast(92%);
+  filter: invert(31%) sepia(26%) saturate(429%) hue-rotate(42deg) brightness(106%) contrast(103%);
 }
 
 footer {
@@ -71,7 +71,7 @@ footer {
   height: var(--footer-height);
   padding: var(--footer-padding-v) 16px;
   color: #fff;
-  background-color: #555;
+  background-color: #444;
   text-align: center;
 }
 
@@ -87,19 +87,19 @@ footer small {
 
 @media (hover: hover) {
   a:hover {
-    color: #66b545;
+    color: #669545;
   }
 
   header a:hover, footer a:hover {
-    color: #aaf585;
+    color: #ddffb5;
   }
 
   #list-content #pagination a:hover {
-    border-color: #66b545;
+    border-color: #669545;
   }
 
   #view-content #category-list a:hover {
-    background: #80c550;
+    background: #509000;
   }
 }
 
@@ -148,18 +148,32 @@ footer small {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-decoration-style: dotted;
+    text-decoration-color: #aaa;
+  }
+
+  header a, footer a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-style: dotted;
+    text-decoration-color: #999;
   }
 
   a:active {
     text-decoration: none;
   }
 
+  main .markdown-body pre {
+    width: 100vw;
+    margin: 0 calc(50% - 50vw);
+    border-radius: initial;
+  }
+
   main .markdown-body a {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-decoration-style: dotted;
+    text-decoration-color: #90f000;
   }
-
 
   #list-content {
     min-height: calc(100vh - var(--header-total-height) - var(--footer-total-height));
@@ -325,8 +339,12 @@ main .markdown-body ul {
 }
 
 main .markdown-body pre {
-  padding: 8px;
-  background-color: #555;
+  padding: 0;
+  background-color: #444;
+}
+
+main .markdown-body pre code {
+  padding: 16px;
 }
 
 main .markdown-body blockquote {

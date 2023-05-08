@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202212181527"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta name="description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にしていくことにしました。 ※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。 この記事は"><meta name="keywords" content="Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta property="og:description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にしていくことにしました。 ※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。 この記事は"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202305080935"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta name="description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にしていくことにしました。 ※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。 この記事は"><meta name="keywords" content="Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta property="og:description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にしていくことにしました。 ※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。 この記事は"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -279,7 +279,140 @@ class Wales extends GreatBritain {}
 <h1 id="%E3%82%AF%E3%83%A9%E3%82%B9%E4%BF%AE%E9%A3%BE%E5%AD%90">クラス修飾子</h1>
 <p><a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/class-modifiers/feature-specification.md" target="_blank" rel="noopener">新しいクラス修飾子</a> は <code>sealed</code> の他にもいくつかあります。<br>
 仕様書の <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/class-modifiers/feature-specification.md#syntax" target="_blank" rel="noopener">Syntax</a> のところにある <code>sealed</code> も含めた修飾子のわかりやすい表をそのまま貼ります。</p>
-<table><thead><tr><th>Declaration</th><th>Construct?</th><th>Extend?</th><th>Implement?</th><th>Mix in?</th><th>Exhaustive?</th></tr></thead><tbody><tr><td><code>class</code></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td><td>No</td></tr><tr><td><code>base class</code></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td><td>No</td><td>No</td></tr><tr><td><code>interface class</code></td><td><strong>Yes</strong></td><td>No</td><td><strong>Yes</strong></td><td>No</td><td>No</td></tr><tr><td><code>final class</code></td><td><strong>Yes</strong></td><td>No</td><td>No</td><td>No</td><td>No</td></tr><tr><td><code>sealed class</code></td><td>No</td><td>No</td><td>No</td><td>No</td><td><strong>Yes</strong></td></tr><tr><td><code>abstract class</code></td><td>No</td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td><td>No</td></tr><tr><td><code>abstract base class</code></td><td>No</td><td><strong>Yes</strong></td><td>No</td><td>No</td><td>No</td></tr><tr><td><code>abstract interface class</code></td><td>No</td><td>No</td><td><strong>Yes</strong></td><td>No</td><td>No</td></tr><tr><td><code>abstract final class</code></td><td>No</td><td>No</td><td>No</td><td>No</td><td>No</td></tr><tr><td><code>mixin class</code></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td></tr><tr><td><code>base mixin class</code></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td><td><strong>Yes</strong></td><td>No</td></tr><tr><td><code>abstract mixin class</code></td><td>No</td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td></tr><tr><td><code>abstract base mixin class</code></td><td>No</td><td><strong>Yes</strong></td><td>No</td><td><strong>Yes</strong></td><td>No</td></tr><tr><td><code>mixin</code></td><td>No</td><td>No</td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td>No</td></tr><tr><td><code>base mixin</code></td><td>No</td><td>No</td><td>No</td><td><strong>Yes</strong></td><td>No</td></tr></tbody></table>
+<table>
+<thead>
+<tr>
+<th>Declaration</th>
+<th>Construct?</th>
+<th>Extend?</th>
+<th>Implement?</th>
+<th>Mix in?</th>
+<th>Exhaustive?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>class</code></td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>base class</code></td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>interface class</code></td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>final class</code></td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>sealed class</code></td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+</tr>
+<tr>
+<td><code>abstract class</code></td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>abstract base class</code></td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>abstract interface class</code></td>
+<td>No</td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>abstract final class</code></td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>mixin class</code></td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>base mixin class</code></td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>abstract mixin class</code></td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>abstract base mixin class</code></td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>mixin</code></td>
+<td>No</td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>base mixin</code></td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
 <p><code>sealed class</code> は Construct、Extend、Implement、Mix in が No になっていて Exhaustive だけが Yes です。<br>
 Extend 等が No なのが変に思えますが、他の修飾子の組み合わせに関して次のように書かれているので、その意味でできないということかもしれません。</p>
 <blockquote>
