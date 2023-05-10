@@ -242,6 +242,19 @@ if (r case (int i, String s)) {
 </ul>
 </li>
 </ul>
+<p>switch や if の case と異なり、for-in では宣言時のルールが適用されるようです。</p>
+<pre><code class="language-dart">final countries = [  
+  (code: 'JP', country: 'Japan'),  
+  (code: 'CA', country: 'Canada'),  
+  (code: 'GR', country: 'Greece'),  
+];  
+  
+for (final (:code, :country) in countries) {  
+  print('[$code] $country');  
+}  
+</code></pre>
+<p>試してみると、<code>for ((:var code, :var country) in countries)</code> とは書けず、括弧の前に var か final が必要で、括弧の中では var も final も使えませんでした。<br>
+また、countries という List の要素は全て同じ record 型でなければエラーとなりました。</p>
 <h3 id="%E3%83%AF%E3%82%A4%E3%83%AB%E3%83%89%E3%82%AB%E3%83%BC%E3%83%89">ワイルドカード</h3>
 <p><code>final (_, _) = (1, 2);</code> のようにワイルドカードとしてアンダースコアを使うことができます。<br>
 型でマッチさせたいけれど値を変数名に紐づけなくていい場合に役立ちます。</p>
@@ -303,10 +316,9 @@ null が入っている変数に対して <code>!</code> を使ったときと�
 <p>record と同じ shape のパターンであればマッチして destructure が行われるというものです。<br>
 ここまで他のパターンの例として見てきた <code>case (int a, int b)</code> のような形は record pattern でもあります。</p>
 <p>名前付きフィールドはまだ見ていませんでしたので、ここではそれを把握しましょう。</p>
-<pre><code class="language-dart">final record = someRecord();  
-  
-switch (record) {  
-  case (width: final w, height: final h):  
+<pre><code class="language-dart">final dimension = (width: 100, height: 200);  
+</code></pre>
+<pre><code class="language-dart">if (dimension case (width: final w, height: final h)) {  
     print('$w x $h');  
 }  
 </code></pre>
@@ -316,8 +328,7 @@ switch (record) {
 コロンの後ろでは <code>case (width :final w as int, height :final h?)</code> のように他のパターンを組み合わせることができます。</p>
 <h3 id="%E8%AD%98%E5%88%A5%E5%AD%90%E3%81%AE%E7%9C%81%E7%95%A5">識別子の省略</h3>
 <p>destructure によって代入される変数の名前が識別子と同じなら識別子を省略できます。</p>
-<pre><code class="language-dart">switch (record) {  
-  case (:final width, :final height):  
+<pre><code class="language-dart">if (dimension case (:final width, :final height)) {  
     print('$width x $height');  
 }  
 </code></pre>

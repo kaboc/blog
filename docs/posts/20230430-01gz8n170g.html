@@ -9,6 +9,10 @@ gtag('config', 'G-8T92E4QR06');
 <p>※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。</p>
 <p>この記事は <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/sealed-types/feature-specification.md" target="_blank" rel="noopener">sealed 型の仕様書</a> をベースにし、他のいくつかのページのコード例も取り入れています。<br>
 コード例は少し改変しています。</p>
+<p><strong>続編</strong></p>
+<ul>
+<li><a href="https://blog.kaboc.cc/posts/20230510-01h02zbtpc" target="_blank" rel="noopener">Dart 3のリリースに備えて - record型とpatterns</a></li>
+</ul>
 <h1 id="sealed%20%E5%9E%8B%E3%81%A7%E5%8F%AF%E8%83%BD%E3%81%AB%E3%81%AA%E3%82%8B%E3%81%93%E3%81%A8">sealed 型で可能になること</h1>
 <p><code>sealed</code> を付けると、サブタイプを利用するときに網羅性をチェックできるようになります。</p>
 <h2 id="%E5%BE%93%E6%9D%A5%E3%81%AE%E6%96%B9%E6%B3%95">従来の方法</h2>
@@ -84,8 +88,7 @@ class Circle extends Shape {
 }  
 </code></pre>
 <h1 id="switch%20%E3%81%AE%E9%80%B2%E5%8C%96">switch の進化</h1>
-<p>sealed 型が導入されたことは Dart の一つの進化ですが、以前から存在する switch の進化も目覚ましいです。<br>
-パターンマッチングが行いやすいように改善されています。</p>
+<p>switch はパターンマッチングや使い勝手のための改善が多く加えられて大きく進化しました。</p>
 <h2 id="patterns">patterns</h2>
 <p>これまでは <code>case</code> で指定するのは定数でなければなりませんでしたが、Dart 3 では様々な値（パターン）でマッチングを行うことが可能になりました。<br>
 パターンは <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#patterns" target="_blank" rel="noopener">仕様書</a> によると従来の「式」と「文」に次ぐ第三の分類です。</p>
@@ -97,16 +100,22 @@ class Circle extends Shape {
 <p>先ほどの sealed 型を使った例では <code>Square()</code> と <code>Circle()</code> は定数ではないのに <code>case</code> で使用できています。</p>
 <h3 id="destructuring">destructuring</h3>
 <p>マッチングを行いながら destructure して値を取り出すことまでできるようになっています。</p>
-<pre><code class="language-dart">double calculateArea() {  
-  switch (self) {  
-    case Square(length: final l):  
-      return l * l;  
-    case Circle(radius: final r):  
-      return math.pi * r * r;  
-  }  
+<pre><code class="language-dart">switch (shape) {  
+  case Square(length: final l):  
+    return l * l;  
+  case Circle(radius: final r):  
+    return math.pi * r * r;  
 }  
 </code></pre>
-<p>この例は様々な patterns のうちの <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#object-pattern" target="_blank" rel="noopener">object pattern</a> です。</p>
+<p>取り出した値を入れる変数がコロンの前の名前（識別子）と同じなら識別子を省略できます。</p>
+<pre><code class="language-dart">switch (shape) {  
+  case Square(:final length):  
+    return length * length;  
+  case Circle(:final radius):  
+    return math.pi * radius * radius;  
+}  
+</code></pre>
+<p>なお、この例は様々な patterns のうちの <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#object-pattern" target="_blank" rel="noopener">object pattern</a> に該当します。</p>
 <blockquote>
 <p>An object pattern matches values of a given named type and then extracts values from it by calling getters on the value. Object patterns let users destructure data from arbitrary objects using the getters the object's class already exposes.</p>
 </blockquote>
@@ -159,6 +168,43 @@ class Dog extends Animals {}
 </code></pre>
 <p><code>break</code> の記述はオプショナルですが、<a href="https://dart-lang.github.io/linter/lints/unnecessary_breaks.html" target="_blank" rel="noopener">unnecessary_breaks</a> の lint ルールを有効にすると不要な場合に警告されるようになります。</p>
 <p>本記事のこの先のコード例でも <code>break</code> は使われません。</p>
+<h2 id="when">when</h2>
+<p>パターンにマッチした後に <code>when</code> による <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#guard-clause" target="_blank" rel="noopener">ガード節</a> で追加の評価を行うことができます。<br>
+そこが false なら次の case に移るので、複数の同じ case を書いて異なる <code>when</code> によって分岐させることが可能です。</p>
+<pre><code class="language-dart">switch (shape) {  
+  case Square(size: var s) || Circle(size: var s) when s &gt; 0:  
+    print('Non-empty symmetric shape');  
+  case Square() || Circle():  
+    print('Empty symmetric shape');  
+  default:  
+    print('Asymmetric shape');  
+}  
+</code></pre>
+<h2 id="%E6%AF%94%E8%BC%83%E6%BC%94%E7%AE%97%E5%AD%90%E3%81%AB%E3%82%88%E3%82%8B%E3%83%9E%E3%83%83%E3%83%81%E3%83%B3%E3%82%B0">比較演算子によるマッチング</h2>
+<p><code>==</code>、<code>&lt;=</code> 等の比較演算子を使ったパターンでマッチングできるようになるのも大きな改善です。<br>
+これは様々な patterns のうちの <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#relational-pattern" target="_blank" rel="noopener">relational pattern</a> です。</p>
+<p>relational pattern を sealed 型に対して活用する例があると良いのですが、思いつかないのでリンク先の例をそのまま貼ります。</p>
+<pre><code class="language-dart">String asciiCharType(int char) {  
+  const space = 32;  
+  const zero = 48;  
+  const nine = 57;  
+  
+  return switch (char) {  
+    &lt; space =&gt; 'control',  
+    == space =&gt; 'space',  
+    &gt; space &amp;&amp; &lt; zero =&gt; 'punctuation',  
+    &gt;= zero &amp;&amp; &lt;= nine =&gt; 'digit',  
+    // Etc...  
+  }  
+}  
+</code></pre>
+<h2 id="if-case">if-case</h2>
+<p>if も進化しているのでついでに書きます。</p>
+<p>switch を使うまでもない場合に <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#if-case-statement-and-element" target="_blank" rel="noopener">if-case</a> で switch と同様の <code>case</code> でパターンを使うことができます。</p>
+<pre><code class="language-dart">if (shape case Circle(radius: final r)) {  
+  final area = math.pi * r * r;  
+}  
+</code></pre>
 <h1 id="sealed%20%E5%9E%8B%E3%81%AE%E8%A9%B3%E7%B4%B0">sealed 型の詳細</h1>
 <p>さて余談が多くなりましたが、sealed 型の詳細を見ましょう。</p>
 <h2 id="%E5%88%B6%E9%99%90">制限</h2>
