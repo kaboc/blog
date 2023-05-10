@@ -1,0 +1,343 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dart 3のリリースに備えて - record型とpatterns | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20230510-01h02zbtpc"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202305081040"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dart 3のリリースに備えて - record型とpatterns | Kabolog"><meta name="description" content="Dart 3 の新機能に関するシリーズの第二弾です。 第一弾： Dart 3のリリースに備えて - sealed型と進化したswitch switch の新機能はこの記事にも関係するので、把握していない方はあわせてお読みください。 record 型とは 複数の値をまとめて一つの値として扱いたいときに使える型です。 Dart 3 未満まではクラスを作るか、コレ"><meta name="keywords" content="Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20230510-01h02zbtpc"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dart 3のリリースに備えて - record型とpatterns | Kabolog"><meta property="og:description" content="Dart 3 の新機能に関するシリーズの第二弾です。 第一弾： Dart 3のリリースに備えて - sealed型と進化したswitch switch の新機能はこの記事にも関係するので、把握していない方はあわせてお読みください。 record 型とは 複数の値をまとめて一つの値として扱いたいときに使える型です。 Dart 3 未満まではクラスを作るか、コレ"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-8T92E4QR06');
+</script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Dart 3のリリースに備えて - record型とpatterns</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart">Dart</a></li></ul><time datetime="2023-05-10T13:59:43.109434Z">2023-05-10</time></section><article class="markdown-body"><p>Dart 3 の新機能に関するシリーズの第二弾です。</p>
+<ul>
+<li>第一弾： <a href="https://blog.kaboc.cc/posts/20230430-01gz8n170g" target="_blank" rel="noopener">Dart 3のリリースに備えて - sealed型と進化したswitch</a></li>
+</ul>
+<p>switch の新機能はこの記事にも関係するので、把握していない方はあわせてお読みください。</p>
+<h1 id="record%20%E5%9E%8B%E3%81%A8%E3%81%AF">record 型とは</h1>
+<p>複数の値をまとめて一つの値として扱いたいときに使える型です。<br>
+Dart 3 未満まではクラスを作るか、コレクション（List、Map、Set）を使うか、tuple 等のパッケージを使うしかなくて、クラスの場合は特に冗長になって面倒でした。</p>
+<h2 id="%E3%81%A9%E3%82%93%E3%81%AA%E6%84%9F%E3%81%98%EF%BC%9F">どんな感じ？</h2>
+<p>三つの数を受け取り、合計値と平均値の record を返す関数の例です。</p>
+<pre><code class="language-dart">({int sum, String average}) calculate(int a, int b, int c) {  
+  final sum = a + b + c;  
+  final average = (sum / 3).toStringAsFixed(2);  
+  return (sum: sum, average: average);  
+}  
+</code></pre>
+<pre><code class="language-dart">final (int, String) r = calculate(2, 5, 7);  
+print(r);         // (14, 4.67)  
+print(r.sum);     // 14  
+print(r.average); // 4.67  
+</code></pre>
+<p>もし代わりに List 型で返すと、二つの要素の型が異なるせいで <code>List&lt;Object&gt;</code> になってしまい、本来の型に戻すためにキャストしなければなりません。<br>
+一方 record 型では、フィールド数が決まっていてフィールドごとに型が明確になっているので、取り出してそのまま使えます。</p>
+<h1 id="record%20%E5%9E%8B%E3%81%AE%E8%A9%B3%E7%B4%B0">record 型の詳細</h1>
+<p>dart:core に <a href="https://github.com/dart-lang/sdk/blob/master/sdk/lib/core/record.dart" target="_blank" rel="noopener">Record</a> クラスがあり、どの record 型もこれのサブタイプになります。<br>
+定義は次のようになっていて、Object クラスから継承したメンバがあるだけです。</p>
+<pre><code class="language-dart">abstract final class Record {  
+  Type get runtimeType;  
+  int get hashCode;  
+  bool operator ==(Object other);  
+  String toString();  
+}  
+</code></pre>
+<h2 id="%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89">フィールド</h2>
+<p>フィールドは関数の引数と似ていて、名前付きと positional があります。<br>
+名前付きフィールドの順序が自由であることや positional なフィールドを名前付きの前にも後ろにも置けることも引数と同様です。</p>
+<p>record は immutable なのでフィールドの値を書き換えることはできません。<br>
+mutable なオブジェクトへの参照を持つことは可能です。</p>
+<h3 id="%E3%82%B2%E3%83%83%E3%82%BF%E3%83%BC">ゲッター</h3>
+<p>名前付きフィールドではゲッター名はフィールド名と同じです。</p>
+<pre><code class="language-dart">final r = (name: 'Dart', version: 3.0);  
+print(r.name);    // Dart  
+print(r.version); // 3.0  
+</code></pre>
+<p>positional なフィールドでは 1 から始まる番号の前に <code>$</code> が付いた <code>$1</code>、<code>$2</code> ... となります。</p>
+<pre><code class="language-dart">final r = ('Dart', 3.0);  
+print(r.$1); // Dart  
+print(r.$2); // 3.0  
+</code></pre>
+<p>名前付きと positional が混ざっている場合は次のようになります。</p>
+<pre><code class="language-dart">final r = (1.2, name: 's', true, count: 3);  
+print(r.$1);    // 1.2  
+print(r.name);  // s  
+print(r.$2);    // true  
+print(r.count); // 3  
+</code></pre>
+<p>なお、<code>(1, 2)</code> のフィールドのゲッターは <code>$1</code>、<code>$2</code> ですが、内部的に <code>($1: 1, $2: 2)</code> になっているわけではないので <code>(int, int) r = ($1: 1, $2: 2);</code> は不可です。</p>
+<h3 id="%E3%82%BB%E3%83%83%E3%82%BF%E3%83%BC">セッター</h3>
+<p>先述のとおり record 型は immutable なので、セッターはありません。</p>
+<h3 id="record%20%E3%82%92%E4%BD%9C%E3%82%8B%E3%81%A8%E3%81%8D%E3%81%AE%E5%88%B6%E7%B4%84">record を作るときの制約</h3>
+<p>いくつかの制約がありますが、それ以外はフィールドは関数の引数にそっくりです。<br>
+制約は次のとおりです</p>
+<ul>
+<li>同じフィールド名は複数回使えない</li>
+<li>positional なフィールドが一つだけなら後ろにカンマが必要
+<ul>
+<li><code>(int) r = (10,);</code> はエラー
+<ul>
+<li><code>(int,) r = (10,);</code> としなければならない</li>
+</ul>
+</li>
+<li><code>final r = (10);</code> は括弧で囲まれた int の値として扱われるので OK</li>
+<li><code>final (int,) r = (10);</code> は int 型を record 型の変数に入れようとして実行時エラー</li>
+</ul>
+</li>
+<li><code>(,)</code> は不可
+<ul>
+<li><code>final empty = ();</code> は OK
+<ul>
+<li><code>()</code> はフィールドのない空の record の定数</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>特殊な名前はフィールド名として使えない
+<ul>
+<li>Record クラスのメンバと同じ名前（<code>hashCode</code> 等）</li>
+<li>アンダースコアで始まる名前</li>
+<li>positional なフィールドのゲッターと衝突する名前
+<ul>
+<li><code>('a', $1: 'b')</code> は不可</li>
+<li><code>($1: 'a', $2: 'b')</code> や <code>('a', $2: 'b')</code> は OK</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="%E5%9E%8B%E3%82%A2%E3%83%8E%E3%83%86%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3">型アノテーション</h2>
+<p>型アノテーションとは型を示すために書く部分のことです。<br>
+例えば <code>List&lt;String&gt; name;</code> の  <code>List&lt;String&gt;</code> の部分です。<br>
+record 型のアノテーションは <code>()</code> で囲います。</p>
+<pre><code class="language-dart">(int, String name, bool) triple; // nameはオプショナルで単に説明用  
+({int n, String s}) pair;  
+(bool, num, {int n, String s}) quad;  
+</code></pre>
+<p>関数型の引数の書き方（例： <code>void Function(int, {String name})</code>）と同じですが、次の点だけ異なります。</p>
+<ul>
+<li><code>required</code> はない</li>
+<li>省略可能な positional のフィールドはない</li>
+</ul>
+<h3 id="%E5%88%B6%E7%B4%84">制約</h3>
+<p>record 型のアノテーションには record を作るときと同じ制約があります。</p>
+<p>しかし書き方は異なるので注意しましょう。<br>
+record を作るとき、型アノテーションを書くとき、record pattern（後述）を書くときの書き方はそれぞれ異なることを意識して読んでいただくと混同するのを避けやすいと思います。</p>
+<h3 id="typedef%20%E3%82%84%20extension">typedef や extension</h3>
+<p>他の型と同様に別名を付けたりメソッドを生やしたりすることができます。<br>
+でも下記のようなことをするならクラスのほうが適していると思います。</p>
+<pre><code class="language-dart">typedef Date = ({int year, int month, int day});  
+  
+extension on Date {  
+  Date add({required int days}) {  
+    final dateTime = DateTime(year, month, day).add(Duration(days: days));  
+    return (year: dateTime.year, month: dateTime.month, day: dateTime.day);  
+  }  
+}  
+</code></pre>
+<pre><code class="language-dart">final today = (year: 2023, month: 5, day: 10);  
+print(today.add(days: 100)); // (day: 18, month: 8, year: 2023)  
+</code></pre>
+<h2 id="%E5%9E%8B%E3%83%AA%E3%83%86%E3%83%A9%E3%83%AB">型リテラル</h2>
+<p>式として使える型リテラルはありません。</p>
+<pre><code class="language-dart">Type t1 = int;           // OK  
+Type t2 = (int, String); // エラー  
+</code></pre>
+<p><code>(int, String)</code> は int 型のリテラルと String 型のリテラルを持つ record（Type 型のフィールドを二つ持つ record）になり、record 型のリテラルになりません。</p>
+<pre><code class="language-dart">(Type, Type) r = (int, String);  
+</code></pre>
+<h2 id="%E5%90%8C%E4%B8%80%E6%80%A7">同一性</h2>
+<p>record は構造的に型付けられます。<br>
+宣言や命名が不要で、shape とフィールドの型が一致すれば同じ record 型と認識されます。<br>
+shape とは、positional なフィールドの数（arity）と名前付きフィールドの名前のことです。</p>
+<ul>
+<li><code>(x: 1, 2) == (x: 1, 2)</code> は true</li>
+<li>名前付きフィールドの順序は shape に含まれないので <code>(x: 1, 2) == (2, x: 1)</code> も true</li>
+<li>異なる library にある他の人が作った record に shape とフィールドの型が一致すれば同じ record 型として使えるので、クラスを使う場合より柔軟に扱える</li>
+</ul>
+<h2 id="%E5%AE%9F%E8%A1%8C%E6%99%82%E3%81%AE%E5%9E%8B">実行時の型</h2>
+<p>record の実行時の型はフィールドの実行時の型で決まります。<br>
+下記コードでは変数は <code>(num, Object)</code> で宣言されていますが、実行時には <code>(int, double)</code> になります。</p>
+<pre><code class="language-dart">(num, Object) pair = (1, 2.3);  
+print(pair.runtimeType);      // (int, double)  
+print(pair is (int, double)); // true  
+</code></pre>
+<h2 id="%E4%BD%BF%E3%81%88%E3%81%AA%E3%81%84%E5%A0%B4%E6%89%80">使えない場所</h2>
+<p>record 型やエイリアスは次の場所で使えず、使うとコンパイル時にエラーになります。</p>
+<ul>
+<li>extends、implements、with の各節</li>
+<li>mixin の宣言の on 節</li>
+</ul>
+<p>extension の on では先ほどの例のように使えます。</p>
+<h2 id="%E5%8F%A4%E3%81%84%20Dart%20%E3%81%A7%E3%81%AE%E5%88%A9%E7%94%A8">古い Dart での利用</h2>
+<p>Dart 3 に対応したライブラリ（誰かが作ったパッケージなど）で record 型が使われている場合、Dart 3 未満のライブラリで読み込んでその record 型を利用することが可能です。</p>
+<h2 id="%E3%81%A7%E3%81%8D%E3%81%AA%E3%81%84%E3%81%93%E3%81%A8">できないこと</h2>
+<h3 id="%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89%E3%81%AE%E8%B5%B0%E6%9F%BB">フィールドの走査</h3>
+<p>List、enum 等の要素・フィールドは走査できますが、record のフィールドはできないようです。<br>
+これができないと <code>&lt;T extends Record&gt;</code> のジェネリックな record からフィールドを取り出せません。<br>
+クラスのプロパティや関数の引数もできないので、それと同様ということかなと思います。</p>
+<pre><code class="language-dart">void someFunc&lt;T extends Record&gt;(T record) {  
+  // せっかく受け取っても活用できない  
+}  
+</code></pre>
+<h3 id="await">await</h3>
+<p>record のフィールドに Future を設定して並行実行して待つことができれば <code>Future.wait()</code> の代わりに使えますが、今はまだできなくて次の issue で検討されています。</p>
+<ul>
+<li><a href="https://github.com/dart-lang/language/issues/2321" target="_blank" rel="noopener">Awaiting records. · Issue #2321 · dart-lang/language</a></li>
+</ul>
+<p>実現すれば、<code>Future.wait()</code> と違って結果をキャストして元の型に戻す手間もなく使えるようになりそうです。</p>
+<h1 id="patterns">patterns</h1>
+<p>値がパターンにマッチする場合に値を分解（destructure）して取り出すことができる機能です。<br>
+この記事では record に特に関連するパターンを取り上げます。<br>
+record 以外の一部のパターンは <a href="https://blog.kaboc.cc/posts/20230430-01gz8n170g" target="_blank" rel="noopener">前の記事</a> に少し書いていますのでお読みください。</p>
+<p>いくつかのパターンを紹介しますが、その前に単純な例を見て雰囲気を掴みましょう。</p>
+<p><strong>record のフィールドの値を取り出して変数に入れる例</strong></p>
+<p><code>(int i, String s)</code> というのがパターンで、各フィールドの取り出した値が i と s に入ります。</p>
+<pre><code class="language-dart">final (int i, String s) = (123, 'abc');  
+print(i); // 123  
+print(s); // abc  
+</code></pre>
+<p>下記では <code>(123, 'abc')</code> は <code>(int i, double d)</code> というパターンに一致しないので、コンパイル時にエラーになります。</p>
+<pre><code class="language-dart">final (int i, double d) = (123, 'abc');  
+</code></pre>
+<p><strong>if-case で該当した場合にフィールドの値が取り出される例</strong></p>
+<pre><code class="language-dart">final r = (123, 'abc');  
+  
+if (r case (int i, String s)) {  
+  print("(int $i, String '$s')");  
+}  
+</code></pre>
+<h1 id="record%20%E3%81%AB%E9%96%A2%E9%80%A3%E3%81%99%E3%82%8B%E3%81%84%E3%81%8F%E3%81%A4%E3%81%8B%E3%81%AE%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3">record に関連するいくつかのパターン</h1>
+<h2 id="Variable%20pattern">Variable pattern</h2>
+<p>いま上で見た例がこのパターンです。</p>
+<p>パターンの各フィールドのところには型アノテーションか var と final のいずれかが必要です。<br>
+ただし、宣言時は変数単位で var や final を指定できません。</p>
+<ul>
+<li>OK
+<ul>
+<li><code>case (final int a, final int b)</code></li>
+<li><code>case (int a, int b)</code></li>
+<li><code>case (final a, var b)</code></li>
+<li><code>case (int _, int _)</code></li>
+</ul>
+</li>
+<li>不可
+<ul>
+<li><code>case (var int a, var int b)</code></li>
+<li><code>case (a, b)</code></li>
+</ul>
+</li>
+</ul>
+<p>宣言時：</p>
+<ul>
+<li>OK
+<ul>
+<li><code>final (int a, int b) = (1, 2);</code></li>
+<li><code>final (a, b) = (1, 2);</code></li>
+<li><code>final (int _, int _) = (1, 2);</code></li>
+<li><code>final (_, _) = (1, 2);</code></li>
+</ul>
+</li>
+<li><a href="https://dart.dev/tools/diagnostic-messages#variable_pattern_keyword_in_declaration_context" target="_blank" rel="noopener">不可</a>
+<ul>
+<li><code>final (final int a, final int b) = (1, 2);</code></li>
+<li><code>final (var a, var b) = (1, 2);</code></li>
+<li><code>final (var int a, var int b) = (1, 2);</code></li>
+<li><code>(int a, int b) = (1, 2);</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="%E3%83%AF%E3%82%A4%E3%83%AB%E3%83%89%E3%82%AB%E3%83%BC%E3%83%89">ワイルドカード</h3>
+<p><code>final (_, _) = (1, 2);</code> のようにワイルドカードとしてアンダースコアを使うことができます。<br>
+型でマッチさせたいけれど値を変数名に紐づけなくていい場合に役立ちます。</p>
+<p>一つのパターンで複数回使うとき、<code>_</code> と <code>__</code> のようにアンダースコアの数をずらす必要はありません。</p>
+<h3 id="%E5%8F%AF%E5%A4%89%E6%80%A7">可変性</h3>
+<p><code>final (a, b) = (1, 2);</code> のようにして取り出した値が入る変数の mutability は <code>(</code> の前の <code>var</code> と <code>final</code> で決まるようです。<br>
+フィールドごとに指定できないのは不便に思うときがあるかもしれません。</p>
+<pre><code class="language-dart">var (i,) = (10,);  
+i = 20; // 可能  
+</code></pre>
+<pre><code class="language-dart">final (i,) = (10,);  
+i = 20; // エラー  
+</code></pre>
+<p>swap を簡潔に書けるようになるのは嬉しいです。</p>
+<pre><code class="language-dart">var (a, b) = ('left', 'right');  
+(b, a) = (a, b);  
+print('$a $b'); // right left  
+</code></pre>
+<h2 id="Cast%20pattern">Cast pattern</h2>
+<pre><code class="language-dart">final (num, Object) r = (123, 'abc');  
+final (int i, String s) = r;  
+</code></pre>
+<p>これはパターンがマッチしないのでできません。<br>
+少し変えて下記のようにパターンのところでキャストすると可能になります。</p>
+<pre><code class="language-dart">final (i as int, s as String) = r;  
+</code></pre>
+<p>キャストできければ実行時にエラーが起こります。<br>
+<code>r.$1</code> は num を指定しているものの実行時の型は int なので、double にキャストしようとするとエラーになります。</p>
+<pre><code class="language-dart">final (d as double, _) = r; // エラー  
+</code></pre>
+<h2 id="Null-assert%20pattern">Null-assert pattern</h2>
+<p><code>!</code> を付けた null-assert pattern では、パターンマッチングしつつ null でないことを断定できます。</p>
+<pre><code class="language-dart">/// フィールドが nullable なrecordを返す  
+(int?, int?) recordWithNullables() {  
+  final nullable = math.Random().nextInt(2).isEven;  
+  return (nullable ? null : 1, nullable ? null : 2);  
+}  
+</code></pre>
+<pre><code class="language-dart">if (recordWithNullables() case (int a!, int b!)) {    
+  print(a * b);    
+}  
+</code></pre>
+<p><code>(int a!, int b!)</code> というパターンは、record の二つのフィールドの片方または両方が null の場合も両方が non-nullable の場合もマッチします。<br>
+ただし、片方だけでも null であればエラーになります。<br>
+null が入っている変数に対して <code>!</code> を使ったときと同じエラーです。</p>
+<p>このパターンは null でないことが明らかな場合のみ使いましょう。<br>
+変数 a と b が null の可能性があれば <code>a * b</code> という計算はできないはずですが、上の例では null でないことが断定済みとなって計算が可能になります。</p>
+<h2 id="Null-check%20pattern">Null-check pattern</h2>
+<p>呼称が null-assert pattern と似ていて紛らわしいですが、こちらは <code>?</code> を用います。</p>
+<pre><code class="language-dart">if (recordWithNullables() case (int a?, int b?)) {  
+  print(a * b);  
+}  
+</code></pre>
+<p>この場合、フィールドが二つとも null でない場合のみマッチし、a と b は non-nullable になります。<br>
+そうでなければマッチしないので if ブロック内は実行されません。</p>
+<p>これは <code>?</code> の印象の逆のように思えて非直観的ですが、<code>?</code> よりも <code>?.</code> のほうをイメージすると理解しやすくなります。<br>
+<code>nullable?.method()</code> で <code>nullable</code> が null でないときだけ <code>method()</code> が実行されるのに似ています。</p>
+<h2 id="Record%20pattern">Record pattern</h2>
+<p>record と同じ shape のパターンであればマッチして destructure が行われるというものです。<br>
+ここまで他のパターンの例として見てきた <code>case (int a, int b)</code> のような形は record pattern でもあります。</p>
+<p>名前付きフィールドはまだ見ていませんでしたので、ここではそれを把握しましょう。</p>
+<pre><code class="language-dart">final record = someRecord();  
+  
+switch (record) {  
+  case (width: final w, height: final h):  
+    print('$w x $h');  
+}  
+</code></pre>
+<p><a href="https://blog.kaboc.cc/posts/20230430-01gz8n170g" target="_blank" rel="noopener">前の記事</a> の object pattern によく似ています。<br>
+ゲッター名を識別子として後ろにコロンを付けた「識別子:」の形で対応させる名前付きフィールドを指定します。<br>
+名前付きフィールドはパターンにおいても順序は任意です。<br>
+コロンの後ろでは <code>case (width :final w as int, height :final h?)</code> のように他のパターンを組み合わせることができます。</p>
+<h3 id="%E8%AD%98%E5%88%A5%E5%AD%90%E3%81%AE%E7%9C%81%E7%95%A5">識別子の省略</h3>
+<p>destructure によって代入される変数の名前が識別子と同じなら識別子を省略できます。</p>
+<pre><code class="language-dart">switch (record) {  
+  case (:final width, :final height):  
+    print('$width x $height');  
+}  
+</code></pre>
+<h4 id="%E6%B3%A8%E6%84%8F%E7%82%B9">注意点</h4>
+<p>識別子の省略によって識別子が被ると当然エラーになります。<br>
+次の例では <code>:x</code> は <code>x</code> という識別子が省略されている形なので <code>x: y</code> の識別子と被ります。</p>
+<pre><code class="language-dart">final (:x, x: y) = (x: 1);  
+</code></pre>
+<p>識別子を推論できない場合もエラーになります。</p>
+<pre><code class="language-dart">final (:int _) = (x: 1);  
+</code></pre>
+<h1 id="%E5%8F%82%E8%80%83%E8%B3%87%E6%96%99">参考資料</h1>
+<ul>
+<li><a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/records/records-feature-specification.md" target="_blank" rel="noopener">language/records-feature-specification.md at main · dart-lang/language</a></li>
+<li><a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md" target="_blank" rel="noopener">language/feature-specification.md at main · dart-lang/language</a></li>
+</ul>
+<p>Dart の <a href="https://github.com/dart-lang/sdk/blob/master/CHANGELOG.md#300---2023-05-10" target="_blank" rel="noopener">更新履歴</a> に公式サイトの新しいページへのリンクがあるので、ここにも貼っておきます。<br>
+この記事を書いている時点ではまだ Dart 3.0 のリリース前なのでそれらのページは未公開です。</p>
+<ul>
+<li><a href="https://dart.dev/language/records" target="_blank" rel="noopener">Records</a></li>
+<li><a href="https://dart.dev/language/patterns" target="_blank" rel="noopener">Pattern matching</a></li>
+</ul>
+</article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20230510-01h02zbtpc&amp;text=Dart%203%E3%81%AE%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E3%81%AB%E5%82%99%E3%81%88%E3%81%A6%20-%20record%E5%9E%8B%E3%81%A8patterns%20%7C%20Kabolog&amp;via=kabochapo" title="ツイートする" target="_blank" rel="noopener"><img src="../res/images/twitter-button.svg" alt="ツイートする" width="40" height="40"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://twitter.com/kabochapo" target="_blank" rel="noopener">kaboc</a></small></footer></div></body></html>
