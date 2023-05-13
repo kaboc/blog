@@ -1,12 +1,11 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202305081040"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta name="description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にしていくことにしました。 ※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。 この記事は"><meta name="keywords" content="Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta property="og:description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にしていくことにしました。 ※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。 この記事は"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202305081040"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta name="description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にすることにしました。 この記事は sealed 型の仕様書 をベースにし、他のいくつかのページのコード例も取り入れています。 コード例は少し改変しています。 続編 D"><meta name="keywords" content="Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta property="og:description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にすることにしました。 この記事は sealed 型の仕様書 をベースにし、他のいくつかのページのコード例も取り入れています。 コード例は少し改変しています。 続編 D"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', 'G-8T92E4QR06');
 </script></head><body><div id="blog-view"><header><p><span><a href="../">Kabolog</a></span><span id="top-social-buttons"><a href="https://twitter.com/kabochapo" target="_blank" rel="noopener"><img src="../res/images/twitter-line.svg" alt="Twitter" width="20" height="20"></a><a href="https://github.com/kaboc" target="_blank" rel="noopener"><img src="../res/images/github-line.svg" alt="GitHub" width="20" height="20"></a></span></p></header><div id="view-content"><main><h1 id="post-title">Dart 3のリリースに備えて - sealed型と進化したswitch</h1><section id="post-meta"><ul id="category-list"><li><a href="../?c=Dart">Dart</a></li></ul><time datetime="2023-04-30T08:38:54.249867Z">2023-04-30</time></section><article class="markdown-body"><p>Dart 3 では多くの新機能が加わって進化しています。<br>
-その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にしていくことにしました。</p>
-<p>※ Patterns が特に膨大でまとめるのは辛そうなので、関連する小さな機能ごとの記事をいくつか書くだけになるかもしれません。</p>
+その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にすることにしました。</p>
 <p>この記事は <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/sealed-types/feature-specification.md" target="_blank" rel="noopener">sealed 型の仕様書</a> をベースにし、他のいくつかのページのコード例も取り入れています。<br>
 コード例は少し改変しています。</p>
 <p><strong>続編</strong></p>
@@ -119,6 +118,9 @@ class Circle extends Shape {
 <blockquote>
 <p>An object pattern matches values of a given named type and then extracts values from it by calling getters on the value. Object patterns let users destructure data from arbitrary objects using the getters the object's class already exposes.</p>
 </blockquote>
+<h3 id="%E4%BB%96%E3%81%AE%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3">他のパターン</h3>
+<p>この記事では他に relational pattern について後述します。<br>
+残りの様々なパターンのいくつかは <a href="https://blog.kaboc.cc/posts/20230510-01h02zbtpc" target="_blank" rel="noopener">続編記事</a> に書いていますので、そちらもお読みください。</p>
 <h2 id="switch%20%E5%BC%8F">switch 式</h2>
 <p>switch を式として使うこともできるようになりました。<br>
 式では case のキーワードは使わずに <code>パターン =&gt; 返す値</code> の形の簡潔な記述になります。<br>
@@ -168,18 +170,6 @@ class Dog extends Animals {}
 </code></pre>
 <p><code>break</code> の記述はオプショナルですが、<a href="https://dart-lang.github.io/linter/lints/unnecessary_breaks.html" target="_blank" rel="noopener">unnecessary_breaks</a> の lint ルールを有効にすると不要な場合に警告されるようになります。</p>
 <p>本記事のこの先のコード例でも <code>break</code> は使われません。</p>
-<h2 id="when">when</h2>
-<p>パターンにマッチした後に <code>when</code> による <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#guard-clause" target="_blank" rel="noopener">ガード節</a> で追加の評価を行うことができます。<br>
-そこが false なら次の case に移るので、複数の同じ case を書いて異なる <code>when</code> によって分岐させることが可能です。</p>
-<pre><code class="language-dart">switch (shape) {  
-  case Square(size: var s) || Circle(size: var s) when s &gt; 0:  
-    print('Non-empty symmetric shape');  
-  case Square() || Circle():  
-    print('Empty symmetric shape');  
-  default:  
-    print('Asymmetric shape');  
-}  
-</code></pre>
 <h2 id="%E6%AF%94%E8%BC%83%E6%BC%94%E7%AE%97%E5%AD%90%E3%81%AB%E3%82%88%E3%82%8B%E3%83%9E%E3%83%83%E3%83%81%E3%83%B3%E3%82%B0">比較演算子によるマッチング</h2>
 <p><code>==</code>、<code>&lt;=</code> 等の比較演算子を使ったパターンでマッチングできるようになるのも大きな改善です。<br>
 これは様々な patterns のうちの <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#relational-pattern" target="_blank" rel="noopener">relational pattern</a> です。</p>
@@ -197,6 +187,21 @@ class Dog extends Animals {}
     // Etc...  
   }  
 }  
+</code></pre>
+<h2 id="when">when</h2>
+<p>パターンにマッチした後に <code>when</code> による <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#guard-clause" target="_blank" rel="noopener">ガード節</a> で追加の評価を行うことができます。<br>
+そこが false なら次の case に移るので、複数の同じ case を書いて異なる <code>when</code> によって分岐させることが可能です。</p>
+<pre><code class="language-dart">switch (shape) {  
+  case Square(size: var s) || Circle(size: var s) when s &gt; 0:  
+    print('Non-empty symmetric shape (size: $s)');  
+  case Square() || Circle():  
+    print('Empty symmetric shape');  
+  default:  
+    print('Asymmetric shape');  
+}  
+</code></pre>
+<p>when を使わずに次のように relational pattern によるマッチングと destructuring を同時に行うこともできるようです。</p>
+<pre><code class="language-dart">case Square(size: &gt; 0 &amp;&amp; var s) || Circle(size: &gt; 0 &amp;&amp; var s):  
 </code></pre>
 <h2 id="if-case">if-case</h2>
 <p>if も進化しているのでついでに書きます。</p>
