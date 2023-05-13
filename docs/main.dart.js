@@ -19742,7 +19742,7 @@
                 // Function start
                 t1 = type$.JSArray_Component;
                 $async$goto = 2;
-                return new A.DomComponent("header", null, null, null, null, null, null, A._setArrayType([A.p(A._setArrayType([A.span(A._setArrayType([B.Link_NHw], t1), null), A.span(A._setArrayType([A.Link$("https://twitter.com/kabochapo", A.img("Twitter", 20, "res/images/twitter-line.svg", 20), true), A.Link$("https://github.com/kaboc", A.img("GitHub", 20, "res/images/github-line.svg", 20), true)], t1), "top-social-buttons")], t1), null)], t1), null);
+                return new A.DomComponent("header", null, null, null, null, null, null, A._setArrayType([A.p(A._setArrayType([A.span(A._setArrayType([B.Link_NHw], t1), null), A.span(A._setArrayType([A.Link$("https://kaboc.cc/", A.img("Home", 20, "res/images/home.svg", 20), false), A.Link$("https://twitter.com/kabochapo", A.img("Twitter", 20, "res/images/brand-twitter.svg", 20), true), A.Link$("https://github.com/kaboc", A.img("GitHub", 20, "res/images/brand-github.svg", 20), true)], t1), "top-social-buttons")], t1), null)], t1), null);
               case 2:
                 // after yield
                 $async$goto = 3;
@@ -19750,7 +19750,7 @@
               case 3:
                 // after yield
                 $async$goto = 4;
-                return new A.DomComponent("footer", null, null, null, null, null, null, A._setArrayType([A.p(B.List_2SD, null), new A.DomComponent("small", null, null, null, null, null, null, B.List_XHn, null)], t1), null);
+                return new A.DomComponent("footer", null, null, null, null, null, null, A._setArrayType([A.p(B.List_2SD, null), new A.DomComponent("small", null, null, null, null, null, null, B.List_EGJ, null)], t1), null);
               case 4:
                 // after yield
                 // implicit return
@@ -27631,14 +27631,14 @@
     B.List_AM_PM = A._setArrayType(makeConstList(["AM", "PM"]), type$.JSArray_String);
     B.List_BC_AD = A._setArrayType(makeConstList(["BC", "AD"]), type$.JSArray_String);
     B.List_CVk = A._setArrayType(makeConstList([0, 0, 65490, 45055, 65535, 34815, 65534, 18431]), type$.JSArray_int);
+    B.Text_xw8 = new A.Text("\xa9 2022 ", null);
+    B.Text_kaboc_null = new A.Text("kaboc", null);
+    B.Link_OkQ = new A.Link("https://kaboc.cc/", false, B.Text_kaboc_null, null);
+    B.List_EGJ = A._setArrayType(makeConstList([B.Text_xw8, B.Link_OkQ]), type$.JSArray_Component);
     B.List_Iik = A._setArrayType(makeConstList(["post-date"]), type$.JSArray_String);
     B.List_JYB = A._setArrayType(makeConstList([0, 0, 26624, 1023, 65534, 2047, 65534, 2047]), type$.JSArray_int);
     B.List_NWH = A._setArrayType(makeConstList(["post-title"]), type$.JSArray_String);
     B.List_Q1_Q2_Q3_Q4 = A._setArrayType(makeConstList(["Q1", "Q2", "Q3", "Q4"]), type$.JSArray_String);
-    B.Text_xw8 = new A.Text("\xa9 2022 ", null);
-    B.Text_kaboc_null = new A.Text("kaboc", null);
-    B.Link_adL = new A.Link("https://twitter.com/kabochapo", true, B.Text_kaboc_null, null);
-    B.List_XHn = A._setArrayType(makeConstList([B.Text_xw8, B.Link_adL]), type$.JSArray_Component);
     B.List_bJM = A._setArrayType(makeConstList(["1st quarter", "2nd quarter", "3rd quarter", "4th quarter"]), type$.JSArray_String);
     B.List_cIc = A._setArrayType(makeConstList(["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]), type$.JSArray_String);
     B.List_empty = A._setArrayType(makeConstList([]), type$.JSArray_String);
