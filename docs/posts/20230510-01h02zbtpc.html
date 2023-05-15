@@ -304,7 +304,7 @@ null が入っている変数に対して <code>!</code> を使ったときと�
 変数 a と b が null の可能性があれば <code>a * b</code> という計算はできないはずですが、上の例では null でないことが断定済みとなって計算が可能になります。</p>
 <h2 id="Null-check%20pattern">Null-check pattern</h2>
 <p>呼称が null-assert pattern と似ていて紛らわしいですが、こちらは <code>?</code> を用います。</p>
-<pre><code class="language-dart">if (recordWithNullables() case (int a?, int b?)) {  
+<pre><code class="language-dart">if (recordWithNullables() case (final a?, final b?)) {  
   print(a * b);  
 }  
 </code></pre>
@@ -312,6 +312,12 @@ null が入っている変数に対して <code>!</code> を使ったときと�
 そうでなければマッチしないので if ブロック内は実行されません。</p>
 <p>これは <code>?</code> の印象の逆のように思えて非直観的ですが、<code>?</code> よりも <code>?.</code> のほうをイメージすると理解しやすくなります。<br>
 <code>nullable?.method()</code> で <code>nullable</code> が null でないときだけ <code>method()</code> が実行されるのに似ています。</p>
+<h3 id="%E5%88%A5%E3%81%AE%E6%96%B9%E6%B3%95">別の方法</h3>
+<p>null-check の代わりに nullable でない型（下記では <code>int</code>）を指定しても null でない場合のみマッチさせることができます。</p>
+<pre><code class="language-dart">if (recordWithNullables() case (final int a, final int b)) {  
+  print(a * b);  
+}  
+</code></pre>
 <h2 id="Record%20pattern">Record pattern</h2>
 <p>record と同じ shape のパターンであればマッチして destructure が行われるというものです。<br>
 ここまで他のパターンの例として見てきた <code>case (int a, int b)</code> のような形は record pattern でもあります。</p>
