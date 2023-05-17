@@ -157,17 +157,17 @@ shape とは、positional なフィールドの数（arity）と名前付きフ�
 print(pair.runtimeType);      // (int, double)  
 print(pair is (int, double)); // true  
 </code></pre>
-<h2 id="%E4%BD%BF%E3%81%88%E3%81%AA%E3%81%84%E5%A0%B4%E6%89%80">使えない場所</h2>
+<h2 id="%E5%8F%A4%E3%81%84%20Dart%20%E3%81%A7%E3%81%AE%E5%88%A9%E7%94%A8">古い Dart での利用</h2>
+<p>Dart 3 に対応したライブラリ（誰かが作ったパッケージなど）で record 型が使われている場合、Dart 3 未満のライブラリで読み込んでその record 型を利用することが可能です。</p>
+<h2 id="%E5%88%B6%E9%99%90">制限</h2>
+<h3 id="%E4%BD%BF%E3%81%88%E3%81%AA%E3%81%84%E5%A0%B4%E6%89%80%E3%81%8C%E3%81%82%E3%82%8B">使えない場所がある</h3>
 <p>record 型やエイリアスは次の場所で使えず、使うとコンパイル時にエラーになります。</p>
 <ul>
 <li>extends、implements、with の各節</li>
 <li>mixin の宣言の on 節</li>
 </ul>
 <p>extension の on では先ほどの例のように使えます。</p>
-<h2 id="%E5%8F%A4%E3%81%84%20Dart%20%E3%81%A7%E3%81%AE%E5%88%A9%E7%94%A8">古い Dart での利用</h2>
-<p>Dart 3 に対応したライブラリ（誰かが作ったパッケージなど）で record 型が使われている場合、Dart 3 未満のライブラリで読み込んでその record 型を利用することが可能です。</p>
-<h2 id="%E3%81%A7%E3%81%8D%E3%81%AA%E3%81%84%E3%81%93%E3%81%A8">できないこと</h2>
-<h3 id="%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89%E3%81%AE%E8%B5%B0%E6%9F%BB">フィールドの走査</h3>
+<h3 id="%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89%E3%81%AE%E8%B5%B0%E6%9F%BB%E3%81%AF%E3%81%A7%E3%81%8D%E3%81%AA%E3%81%84">フィールドの走査はできない</h3>
 <p>List、enum 等の要素・フィールドは走査できますが、record のフィールドはできないようです。<br>
 これができないと <code>&lt;T extends Record&gt;</code> のジェネリックな record からフィールドを取り出せません。<br>
 クラスのプロパティや関数の引数もできないので、それと同様ということかなと思います。</p>
@@ -175,12 +175,21 @@ print(pair is (int, double)); // true
   // せっかく受け取っても活用できない  
 }  
 </code></pre>
+<h3 id="%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89%E3%81%AE%E5%B1%95%E9%96%8B%E3%82%82%EF%BC%88%E4%BB%8A%E3%81%AF%EF%BC%89%E3%81%A7%E3%81%8D%E3%81%AA%E3%81%84">フィールドの展開も（今は）できない</h3>
+<p>今はまだできませんが、将来的に可能になりそうです。<br>
+2023 年 1 月に開催された Flutter Forward の<a href="https://www.youtube.com/watch?v=KhYTFglbF2k&amp;list=PLjxrf2q8roU3LvrdR8Hv_phLrTj0xmjnD&amp;index=11&amp;t=482s" target="_blank" rel="noopener">「Bringing pattern matching to Dart」という動画（8:02 あたり～）</a>によると、サポートすることを考慮して record 型は設計されているそうです。<br>
+引数リスト内で record をスプレッド演算子（<code>...</code>）によって展開してフィールドの値を引数に直接渡すことまでできるようになりそうです。</p>
+<h2 id="Tips">Tips</h2>
 <h3 id="await">await</h3>
-<p>record のフィールドに Future を設定して並行実行して待つことができれば <code>Future.wait()</code> の代わりに使えますが、今はまだできなくて次の issue で検討されています。</p>
-<ul>
-<li><a href="https://github.com/dart-lang/language/issues/2321" target="_blank" rel="noopener">Awaiting records. · Issue #2321 · dart-lang/language</a></li>
-</ul>
-<p>実現すれば、<code>Future.wait()</code> と違って結果をキャストして元の型に戻す手間もなく使えるようになりそうです。</p>
+<p>フィールドが全て Future の場合に限りますが、並行的に実行して結果を待つことができます。<br>
+<code>Future.wait()</code> と違って結果をキャストして元の型に戻す手間もなく使えて便利です。</p>
+<pre><code class="language-dart">Future&lt;int&gt; futureTask1() async { ... }  
+Future&lt;String&gt; futureTask2() async { ... }  
+</code></pre>
+<pre><code class="language-dart">final (int i, String s) = await (futureTask1(), futureTask2()).wait;  
+</code></pre>
+<p><code>wait</code> は record の <a href="https://github.com/dart-lang/sdk/blob/main/sdk/lib/async/future_extensions.dart" target="_blank" rel="noopener">フィールドの個数ごとに用意されている extension</a> です。<br>
+9 個までしかないのでそれより多ければ利用できません。</p>
 <h1 id="patterns">patterns</h1>
 <p>値がパターンにマッチする場合に値を分解（destructure）して取り出すことができる機能です。<br>
 この記事では record に特に関連するパターンを取り上げます。<br>
