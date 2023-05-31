@@ -9757,9 +9757,9 @@
       t2 = leapYear ? 1 : 0;
       return t1 + day + 59 + t2;
     },
-    GrabBuildContext_grabAt(_this, listenable, selector, $R, $S) {
-      if (type$.GrabElement._is(_this))
-        return _this.listen$2$2$listenable$selector(listenable, selector, $R, $S);
+    GrabValueListenableExtension_grabAt(_this, context, selector, $R, $S) {
+      if (type$.GrabElement._is(context))
+        return context.listen$2$2$listenable$selector(_this, selector, $R, $S);
       throw A.wrapException(new A.GrabMixinError());
     },
     current() {
@@ -19318,9 +19318,9 @@
                 // Function start
                 t1 = $.$get$categoryListNotifierPot();
                 t2 = type$.CategoryListState;
-                phase = A.GrabBuildContext_grabAt(context, t1.call$0(), new A.CategoryList_build_closure(), t2, type$.AsyncPhase_List_Category);
-                current = A.GrabBuildContext_grabAt(context, t1.call$0(), new A.CategoryList_build_closure0(), t2, type$.Category);
-                ready = A.GrabBuildContext_grabAt(context, $.$get$postListNotifierPot().call$0(), new A.CategoryList_build_closure1(), type$.PostListState, type$.bool);
+                phase = A.GrabValueListenableExtension_grabAt(t1.call$0(), context, new A.CategoryList_build_closure(), t2, type$.AsyncPhase_List_Category);
+                current = A.GrabValueListenableExtension_grabAt(t1.call$0(), context, new A.CategoryList_build_closure0(), t2, type$.Category);
+                ready = A.GrabValueListenableExtension_grabAt($.$get$postListNotifierPot().call$0(), context, new A.CategoryList_build_closure1(), type$.PostListState, type$.bool);
                 t2 = phase.get$data(phase);
                 t2.toString;
                 $async$goto = J.get$isNotEmpty$asx(t2) && ready ? 2 : 3;
@@ -19485,10 +19485,10 @@
                 // Function start
                 t1 = $.$get$postListNotifierPot();
                 t2 = type$.PostListState;
-                phase = A.GrabBuildContext_grabAt(context, t1.call$0(), new A.Paginator_build_closure(), t2, type$.AsyncPhase_nullable_List_BriefPost);
+                phase = A.GrabValueListenableExtension_grabAt(t1.call$0(), context, new A.Paginator_build_closure(), t2, type$.AsyncPhase_nullable_List_BriefPost);
                 t3 = type$.bool;
-                hasPrev = A.GrabBuildContext_grabAt(context, t1.call$0(), new A.Paginator_build_closure0(), t2, t3);
-                hasNext = A.GrabBuildContext_grabAt(context, t1.call$0(), new A.Paginator_build_closure1(), t2, t3);
+                hasPrev = A.GrabValueListenableExtension_grabAt(t1.call$0(), context, new A.Paginator_build_closure0(), t2, t3);
+                hasNext = A.GrabValueListenableExtension_grabAt(t1.call$0(), context, new A.Paginator_build_closure1(), t2, t3);
                 if (phase instanceof A.AsyncComplete)
                   t2 = !hasPrev && !hasNext;
                 else
@@ -19558,7 +19558,7 @@
             switch ($async$goto) {
               case 0:
                 // Function start
-                phase = A.GrabBuildContext_grabAt(context, $.$get$postListNotifierPot().call$0(), new A.PostList_build_closure(), type$.PostListState, type$.AsyncPhase_nullable_List_BriefPost);
+                phase = A.GrabValueListenableExtension_grabAt($.$get$postListNotifierPot().call$0(), context, new A.PostList_build_closure(), type$.PostListState, type$.AsyncPhase_nullable_List_BriefPost);
                 posts = phase.get$data(phase);
                 if (posts == null) {
                   // goto return
