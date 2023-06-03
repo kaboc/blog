@@ -264,10 +264,29 @@ for (final (:code, :country) in countries) {
 </code></pre>
 <p>試してみると、<code>for ((:var code, :var country) in countries)</code> とは書けず、括弧の前に var か final が必要で、括弧の中では var も final も使えませんでした。<br>
 また、countries という List の要素は全て同じ record 型でなければエラーとなりました。</p>
+<p>patterns にはこのような使われる文脈の種類があり、文脈によって書き方が異なることがあります。<br>
+記事の最後で解説します。</p>
 <h3 id="%E3%83%AF%E3%82%A4%E3%83%AB%E3%83%89%E3%82%AB%E3%83%BC%E3%83%89">ワイルドカード</h3>
 <p><code>final (_, _) = (1, 2);</code> のようにワイルドカードとしてアンダースコアを使うことができます。<br>
 型でマッチさせたいけれど値を変数名に紐づけなくていい場合に役立ちます。</p>
 <p>一つのパターンで複数回使うとき、<code>_</code> と <code>__</code> のようにアンダースコアの数をずらす必要はありません。</p>
+<h4 id="%E5%9E%8B%E3%81%AB%E3%82%88%E3%82%8B%E3%83%9E%E3%83%83%E3%83%81%E3%83%B3%E3%82%B0%E3%81%AB%E4%BD%BF%E3%81%86">型によるマッチングに使う</h4>
+<p>ワイルドカードを使っても使わなくても型でマッチさせることはできますが、destructuring が不要で型のマッチングだけが必要な場合にワイルドカードを使えば意図がわかりやすくなります。</p>
+<pre><code class="language-dart">switch (r) {  
+  case ((_, int _)):  
+    print('${r.$2} is of type int.');  
+  case ((_, double _)):  
+    print('${r.$2.toStringAsFixed(2)} is of type double.');  
+}  
+</code></pre>
+<p>なお、型によるマッチングは <a href="https://blog.kaboc.cc/posts/20230430-01gz8n170g#destructuring" target="_blank" rel="noopener">object pattern</a> でもできます。</p>
+<pre><code class="language-dart">switch (r) {  
+  case ((_, int())):  
+    print('${r.$2} is of type int.');  
+  case ((_, double())):  
+    print('${r.$2.toStringAsFixed(2)} is of type double.');  
+}  
+</code></pre>
 <h3 id="%E5%8F%AF%E5%A4%89%E6%80%A7">可変性</h3>
 <p><code>final (a, b) = (1, 2);</code> のようにして取り出した値が入る変数の mutability は <code>(</code> の前の <code>var</code> と <code>final</code> で決まるようです。<br>
 フィールドごとに指定できないのは不便に思うときがあるかもしれません。</p>
@@ -283,6 +302,9 @@ i = 20; // エラー
 print('$a $b'); // right left  
 </code></pre>
 <h2 id="Cast%20pattern">Cast pattern</h2>
+<pre><code class="language-dart">final (int i, String s) = (123, 'abc');  
+</code></pre>
+<p>これは可能ですが、</p>
 <pre><code class="language-dart">final (num, Object) r = (123, 'abc');  
 final (int i, String s) = r;  
 </code></pre>
@@ -290,10 +312,12 @@ final (int i, String s) = r;
 少し変えて下記のようにパターンのところでキャストすると可能になります。</p>
 <pre><code class="language-dart">final (i as int, s as String) = r;  
 </code></pre>
-<p>キャストできければ実行時にエラーが起こります。<br>
+<p>ただしキャストできなければ実行時にエラーが起こります。<br>
 <code>r.$1</code> は num を指定しているものの実行時の型は int なので、double にキャストしようとするとエラーになります。</p>
 <pre><code class="language-dart">final (d as double, _) = r; // エラー  
 </code></pre>
+<p>キャストが可能かわからない場合は switch や if-case で型によって分岐するほうが安全です。<br>
+少し上のワイルドカードの部分で説明していますので、飛ばした方は戻ってお読みください。</p>
 <h2 id="Null-assert%20pattern">Null-assert pattern</h2>
 <p><code>!</code> を付けた null-assert pattern では、パターンマッチングしつつ null でないことを断定できます。</p>
 <pre><code class="language-dart">/// フィールドが nullable なrecordを返す  
@@ -337,14 +361,16 @@ null が入っている変数に対して <code>!</code> を使ったときと�
     print('$w x $h');  
 }  
 </code></pre>
-<p><a href="https://blog.kaboc.cc/posts/20230430-01gz8n170g" target="_blank" rel="noopener">前の記事</a> の object pattern によく似ています。<br>
+<p><a href="https://blog.kaboc.cc/posts/20230430-01gz8n170g#destructuring" target="_blank" rel="noopener">前の記事</a> の object pattern によく似ています。<br>
 ゲッター名を識別子として後ろにコロンを付けた「識別子:」の形で対応させる名前付きフィールドを指定します。<br>
 名前付きフィールドはパターンにおいても順序は任意です。<br>
 コロンの後ろでは <code>case (width :final w as int, height :final h?)</code> のように他のパターンを組み合わせることができます。</p>
 <h3 id="%E8%AD%98%E5%88%A5%E5%AD%90%E3%81%AE%E7%9C%81%E7%95%A5">識別子の省略</h3>
 <p>destructure によって代入される変数の名前が識別子と同じなら識別子を省略できます。</p>
+<pre><code class="language-dart">final dimension = (width: 100, height: 200);  
+</code></pre>
 <pre><code class="language-dart">if (dimension case (:final width, :final height)) {  
-    print('$width x $height');  
+    print('$width x $height'); // 100 x 200  
 }  
 </code></pre>
 <h4 id="%E6%B3%A8%E6%84%8F%E7%82%B9">注意点</h4>
@@ -355,6 +381,64 @@ null が入っている変数に対して <code>!</code> を使ったときと�
 <p>識別子を推論できない場合もエラーになります。</p>
 <pre><code class="language-dart">final (:int _) = (x: 1);  
 </code></pre>
+<h3 id="%E9%83%A8%E5%88%86%E7%9A%84%E3%81%AA%20destructuring">部分的な destructuring</h3>
+<p>先ほどの dimension という record の例では width と height というフィールドを両方とも取り出しましたが、一部のフィールドの値を指定し、その値も含めてマッチする場合に他のフィールドの値をを取り出すことも可能です。</p>
+<pre><code class="language-dart">if (dimension case (width: 100, :final height)) {    
+  print('100 x $height'); // 100 x 200  
+}   
+</code></pre>
+<p>なお、次のようにするとエラーになります。</p>
+<pre><code class="language-dart">for (final (width: 100, :height) in dimensions) { // ここでエラー  
+  print('100 x $height');    
+}   
+</code></pre>
+<blockquote>
+<p>Refutable patterns can’t be used in an irrefutable context.</p>
+</blockquote>
+<p>irrefutable な文脈（後述）では使えないというエラーです。<br>
+ちなみにこの <code>width: 100</code> というパターンは、record pattern のサブパターンが <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#constant-pattern" target="_blank" rel="noopener">constant pattern</a> になっている形と言えると思います。</p>
+<h3 id="refutable%20%E3%81%A8%20irrefutable">refutable と irrefutable</h3>
+<p>refutable は「否定できる」というような意味です。<br>
+パターンがマッチするかどうか検査できる（該当しなくてもエラーにならない）ことを意味します。<br>
+switch の case も refutable な文脈で、パターンにマッチしなければ実行がスキップされるだけです。</p>
+<p>irrefutable はその逆で、マッチしなければエラーが起こります。</p>
+<h4 id="%E6%96%87%E8%84%88%E3%81%AE%E7%A8%AE%E9%A1%9E">文脈の種類</h4>
+<p>patterns には <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#pattern-context" target="_blank" rel="noopener">3 種類の文脈</a> があり、そのうちの二つが irrefutable です。</p>
+<ul>
+<li>宣言
+<ul>
+<li>irrefutable</li>
+<li>例： <code>final (w, h) = (1, 2);</code></li>
+</ul>
+</li>
+<li>代入
+<ul>
+<li>irrefutable</li>
+<li>例： <code>(a, b) = (1, 2);</code></li>
+</ul>
+</li>
+<li>マッチング
+<ul>
+<li>refutable</li>
+<li>例： <code>case (final a, final b)</code></li>
+</ul>
+</li>
+</ul>
+<p><code>case</code> とそれ以外でパターンの書き方が違うことがあって戸惑いやすいですが、このような文脈の種類があることを意識すると理解しやすくなると思います。</p>
+<h4 id="irrefutable%20%E3%81%AA%E6%96%87%E8%84%88%E3%81%A7%E4%BD%BF%E3%81%88%E3%81%AA%E3%81%84%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3">irrefutable な文脈で使えないパターン</h4>
+<ul>
+<li><a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#logical-or-pattern" target="_blank" rel="noopener">Logical-or
+ pattern</a></li>
+<li><a href="https://blog.kaboc.cc/posts/20230430-01gz8n170g#%E6%AF%94%E8%BC%83%E6%BC%94%E7%AE%97%E5%AD%90%E3%81%AB%E3%82%88%E3%82%8B%E3%83%9E%E3%83%83%E3%83%81%E3%83%B3%E3%82%B0" target="_blank" rel="noopener">Relational
+ pattern</a></li>
+<li><a href="#Null-check%20pattern">Null-check
+ pattern</a></li>
+<li><a href="#%E9%83%A8%E5%88%86%E7%9A%84%E3%81%AA%20destructuring">Constant
+ pattern</a></li>
+</ul>
+<p>これらはマッチしないことがある refutable なパターンです。<br>
+使おうとするとコンパイル時にエラーになります。</p>
+<p>この他に、型チェックが行われるパターン（variable pattern、list pattern など）も、マッチした値の static な型が代入先の型に合わない場合にコンパイル時エラーとなります。</p>
 <h1 id="%E5%8F%82%E8%80%83%E8%B3%87%E6%96%99">参考資料</h1>
 <ul>
 <li><a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/records/records-feature-specification.md" target="_blank" rel="noopener">language/records-feature-specification.md at main · dart-lang/language</a></li>

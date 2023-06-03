@@ -192,16 +192,16 @@ class Dog extends Animals {}
 <p>パターンにマッチした後に <code>when</code> による <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/0546-patterns/feature-specification.md#guard-clause" target="_blank" rel="noopener">ガード節</a> で追加の評価を行うことができます。<br>
 そこが false なら次の case に移るので、複数の同じ case を書いて異なる <code>when</code> によって分岐させることが可能です。</p>
 <pre><code class="language-dart">switch (shape) {  
-  case Square(size: var s) || Circle(size: var s) when s &gt; 0:  
-    print('Non-empty symmetric shape (size: $s)');  
+  case Square(length: var size) || Circle(radius: var size) when size &gt; 0:  
+    print('Non-empty symmetric shape (size: $size)');  
   case Square() || Circle():  
     print('Empty symmetric shape');  
   default:  
     print('Asymmetric shape');  
 }  
 </code></pre>
-<p>when を使わずに次のように relational pattern によるマッチングと destructuring を同時に行うこともできるようです。</p>
-<pre><code class="language-dart">case Square(size: &gt; 0 &amp;&amp; var s) || Circle(size: &gt; 0 &amp;&amp; var s):  
+<p>when を使わずに次のように relational pattern によるマッチングと destructuring を同時に行うこともできます。</p>
+<pre><code class="language-dart">case Square(length: &gt; 0 &amp;&amp; final size) || Circle(radius: &gt; 0 &amp;&amp; final size):  
 </code></pre>
 <h2 id="if-case">if-case</h2>
 <p>if も進化しているのでついでに書きます。</p>
