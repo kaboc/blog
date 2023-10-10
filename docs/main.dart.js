@@ -5770,13 +5770,6 @@
       t2 = $.$get$_hashSeed();
       return A.SystemHash_finish(A.SystemHash_combine(A.SystemHash_combine(A.SystemHash_combine(A.SystemHash_combine(t2, t1), object2), object3), object4));
     },
-    Object_hashAll(objects) {
-      var _i,
-        hash = $.$get$_hashSeed();
-      for (_i = 0; _i < 4; ++_i)
-        hash = A.SystemHash_combine(hash, J.get$hashCode$(objects[_i]));
-      return A.SystemHash_finish(hash);
-    },
     print(object) {
       A.printString(object);
     },
@@ -8144,6 +8137,7 @@
       _._refreshTokenTimer = null;
       _._refreshTokenRetryCount = 0;
       _._refreshTokenCompleter = null;
+      _._isRefreshingToken = false;
       _._onAuthStateChangeController = t3;
       _._onAuthStateChangeControllerSync = t4;
       _._asyncStorage = t5;
@@ -9447,7 +9441,9 @@
       var _ = this;
       _._factory = t0;
       _._disposer = t1;
-      _._prevScope = _._scope = _._object = null;
+      _._object = null;
+      _._hasObject = false;
+      _._prevScope = _._scope = null;
       _.$ti = t2;
     },
     _PotBody: function _PotBody() {
@@ -9456,7 +9452,9 @@
       var _ = this;
       _._factory = t0;
       _._disposer = t1;
-      _._prevScope = _._scope = _._object = null;
+      _._object = null;
+      _._hasObject = false;
+      _._prevScope = _._scope = null;
       _.$ti = t2;
     },
     ChannelEventsExtended_eventName(_this) {
@@ -9491,11 +9489,14 @@
       t2 = A.LinkedHashMap_LinkedHashMap$_literal(["open", A._setArrayType([], t2), "close", A._setArrayType([], t2), "error", A._setArrayType([], t2), "message", A._setArrayType([], t2)], t3, type$.List_Function);
       t4 = A.Uri_parse(endPoint + "/websocket", 0, _null);
       t4 = t4.replace$1$queryParameters(0, _null).get$_text();
-      t3 = A.LinkedHashMap_LinkedHashMap$of(B.Map_23xw8, t3, t3);
+      t3 = A.LinkedHashMap_LinkedHashMap$of(B.Map_23IBZ, t3, t3);
       t3.addAll$1(0, headers);
+      A.zoneClient();
       t1 = new A.RealtimeClient(t1, t4, t3, params, A.websocket_web__createWebSocketClient$closure(), [], t2);
-      t1.RealtimeClient$12$decode$encode$headers$heartbeatIntervalMs$logLevel$logger$longpollerTimeout$params$reconnectAfterMs$timeout$transport(endPoint, _null, _null, headers, 30000, logLevel, _null, 20000, params, _null, B.Duration_10000000, _null);
+      t1.RealtimeClient$13$decode$encode$headers$heartbeatIntervalMs$httpClient$logLevel$logger$longpollerTimeout$params$reconnectAfterMs$timeout$transport(endPoint, _null, _null, headers, 30000, _null, logLevel, _null, 20000, params, _null, B.Duration_10000000, _null);
       return t1;
+    },
+    RealtimeCloseEvent: function RealtimeCloseEvent() {
     },
     RealtimeClient: function RealtimeClient(t0, t1, t2, t3, t4, t5, t6) {
       var _ = this;
@@ -10146,7 +10147,7 @@
     HtmlWebSocketChannel: function HtmlWebSocketChannel(t0, t1) {
       var _ = this;
       _.innerWebSocket = t0;
-      _._localCloseReason = _._localCloseCode = _._closeReason = null;
+      _._localCloseReason = _._localCloseCode = _._closeReason = _._closeCode = null;
       _.__HtmlWebSocketChannel__readyCompleter_A = $;
       _._html0$_controller = t1;
       _.__HtmlWebSocketChannel_sink_FI = $;
@@ -20852,11 +20853,11 @@
       return t1;
     },
     get$hashCode(_) {
-      return A.Object_hashAll([A.getRuntimeTypeOfDartObject(this), this.get$data(this), null, null]);
+      return A.Object_hash(A.getRuntimeTypeOfDartObject(this), this.get$data(this), null, null);
     },
     toString$0(_) {
       var t1, _this = this,
-        shortHash = B.JSString_methods.padLeft$2(B.JSInt_methods.toRadixString$1(_this.get$hashCode(_this) & 1048575, 16), 5, "0");
+        shortHash = B.JSString_methods.padLeft$2(B.JSInt_methods.toRadixString$1(A.Object_hash(A.getRuntimeTypeOfDartObject(_this), _this.get$data(_this), null, null) & 1048575, 16), 5, "0");
       $label0$0: {
         t1 = A._instanceType(_this);
         if (t1._eval$1("AsyncWaiting<1>")._is(_this)) {
@@ -21146,17 +21147,18 @@
   };
   A._AppState.prototype = {
     initState$0() {
-      var t1, t2, object;
+      var t1, t2, t3, t4;
       this.super$State$initState();
       t1 = $.$get$configPot();
       t2 = A._instanceType(t1);
       t2._eval$1("1()")._as(t2._eval$1("1()")._as(A.config_dev_ConfigDev___new_tearOff$closure()));
       t1.set$_factory(A.config_dev_ConfigDev___new_tearOff$closure());
-      object = t1._object;
-      if (object != null) {
-        t2 = t1._disposer;
-        if (t2 != null)
-          t2.call$1(object);
+      if (t1._hasObject) {
+        t3 = t1._disposer;
+        if (t3 != null) {
+          t4 = t1._object;
+          t3.call$1(t4 == null ? t2._precomputed1._as(t4) : t4);
+        }
         t1.set$_object(A.config_dev_ConfigDev___new_tearOff$closure().call$0());
       }
       t1.call$0();
@@ -22985,7 +22987,7 @@
     _callRefreshToken$body$GoTrueClient(accessToken, ignorePendingRequest, refreshToken) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.AuthResponse),
-        $async$returnValue, $async$handler = 2, $async$currentError, $async$self = this, token, jwt, body, options, response, authResponse, error, stack, token0, jwt0, exception, t1, t2, $async$exception;
+        $async$returnValue, $async$handler = 2, $async$currentError, $async$next = [], $async$self = this, token, jwt, body, options, response, authResponse, error, stack, token0, jwt0, exception, t1, t2, $async$exception;
       var $async$_callRefreshToken$3$accessToken$ignorePendingRequest$refreshToken = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
         if ($async$errorCode === 1) {
           $async$currentError = $async$result;
@@ -22999,7 +23001,7 @@
               t2 = t1 == null ? null : (t1.future._state & 30) !== 0;
               if (t2 !== false)
                 $async$self.set$_refreshTokenCompleter(new A._AsyncCompleter(new A._Future($.Zone__current, type$._Future_AuthResponse), type$._AsyncCompleter_AuthResponse));
-              else if (!ignorePendingRequest) {
+              else if (!ignorePendingRequest && $async$self._isRefreshingToken) {
                 $async$returnValue = t1.future;
                 // goto return
                 $async$goto = 1;
@@ -23017,6 +23019,7 @@
               jwt0 = t1 == null ? null : t1.accessToken;
               jwt = jwt0;
               $async$handler = 4;
+              $async$self._isRefreshingToken = true;
               t1 = type$.String;
               body = A.LinkedHashMap_LinkedHashMap$_literal(["refresh_token", token], t1, t1);
               if (jwt != null)
@@ -23042,44 +23045,70 @@
               $async$self._notifyAllSubscribers$1(B.AuthChangeEvent_3);
               $async$self._refreshTokenCompleter.complete$1(0, authResponse);
               $async$returnValue = authResponse;
-              // goto return
-              $async$goto = 1;
+              $async$next = [1];
+              // goto finally
+              $async$goto = 5;
               break;
-              $async$handler = 2;
-              // goto after finally
-              $async$goto = 6;
+              $async$next.push(6);
+              // goto finally
+              $async$goto = 5;
               break;
             case 4:
               // catch
               $async$handler = 3;
               $async$exception = $async$currentError;
-              error = A.unwrapException($async$exception);
-              stack = A.getTraceFromException($async$exception);
-              $async$goto = error instanceof A.AuthException ? 8 : 9;
+              t1 = A.unwrapException($async$exception);
+              $async$goto = t1 instanceof A.ClientException ? 8 : 10;
               break;
             case 8:
               // then
-              $async$goto = error.message === "Invalid Refresh Token: Refresh Token Not Found" ? 10 : 11;
+              $async$self._setTokenRefreshTimer$3$accessToken$refreshToken(new A.Duration(B.JSNumber_methods.round$0(200000 * Math.pow(2, $async$self._refreshTokenRetryCount))), accessToken, token);
+              t1 = $async$self._refreshTokenCompleter.future;
+              $async$returnValue = t1;
+              $async$next = [1];
+              // goto finally
+              $async$goto = 5;
+              break;
+              // goto join
+              $async$goto = 9;
               break;
             case 10:
-              // then
-              $async$goto = 12;
-              return A._asyncAwait($async$self.signOut$0(), $async$_callRefreshToken$3$accessToken$ignorePendingRequest$refreshToken);
-            case 12:
-              // returning from await.
+              // else
+              error = t1;
+              stack = A.getTraceFromException($async$exception);
+              $async$goto = error instanceof A.AuthException ? 11 : 12;
+              break;
             case 11:
+              // then
+              $async$goto = error.message === "Invalid Refresh Token: Refresh Token Not Found" ? 13 : 14;
+              break;
+            case 13:
+              // then
+              $async$goto = 15;
+              return A._asyncAwait($async$self.signOut$0(), $async$_callRefreshToken$3$accessToken$ignorePendingRequest$refreshToken);
+            case 15:
+              // returning from await.
+            case 14:
               // join
-            case 9:
+            case 12:
               // join
               $async$self._onAuthStateChangeController.addError$2(error, stack);
               throw $async$exception;
-              // goto after finally
-              $async$goto = 6;
+            case 9:
+              // join
+              $async$next.push(6);
+              // goto finally
+              $async$goto = 5;
               break;
             case 3:
               // uncaught
-              // goto rethrow
-              $async$goto = 2;
+              $async$next = [2];
+            case 5:
+              // finally
+              $async$handler = 2;
+              $async$self._isRefreshingToken = false;
+              // goto the next finally handler
+              $async$goto = $async$next.pop();
               break;
             case 6:
               // after finally
@@ -27091,65 +27120,77 @@
               break;
             case 6:
               // then
-              $async$goto = J.$eq$(t1.headers.$index(0, "Accept"), "text/csv") ? 8 : 10;
+              t2 = response.bodyBytes;
+              $async$goto = t2.length === 0 ? 8 : 10;
               break;
             case 8:
               // then
-              body = A.encodingForCharset(J.$index$asx(A._contentTypeForHeaders(response.headers).parameters._collection$_map, "charset")).decode$1(0, response.bodyBytes);
+              body = null;
               // goto join
               $async$goto = 9;
               break;
             case 10:
               // else
-              $async$handler = 12;
+              $async$goto = J.$eq$(t1.headers.$index(0, "Accept"), "text/csv") ? 11 : 13;
+              break;
+            case 11:
+              // then
+              body = A.encodingForCharset(J.$index$asx(A._contentTypeForHeaders(response.headers).parameters._collection$_map, "charset")).decode$1(0, t2);
+              // goto join
+              $async$goto = 12;
+              break;
+            case 13:
+              // else
+              $async$handler = 15;
               if (response.contentLength > 10000) {
                 $async$self.__PostgrestBuilder__isolate_F === $ && A.throwLateFieldNI("_isolate");
                 t1 = true;
               } else
                 t1 = false;
-              t2 = response.headers;
-              t3 = response.bodyBytes;
-              $async$goto = t1 ? 15 : 17;
+              t3 = response.headers;
+              $async$goto = t1 ? 18 : 20;
               break;
-            case 15:
+            case 18:
               // then
               t1 = $async$self.__PostgrestBuilder__isolate_F;
               t1 === $ && A.throwLateFieldNI("_isolate");
-              $async$goto = 18;
-              return A._asyncAwait(t1.decode$1(0, A.encodingForCharset(J.$index$asx(A._contentTypeForHeaders(t2).parameters._collection$_map, "charset")).decode$1(0, t3)), $async$_parseResponse$1);
-            case 18:
+              $async$goto = 21;
+              return A._asyncAwait(t1.decode$1(0, A.encodingForCharset(J.$index$asx(A._contentTypeForHeaders(t3).parameters._collection$_map, "charset")).decode$1(0, t2)), $async$_parseResponse$1);
+            case 21:
               // returning from await.
               body = $async$result;
               // goto join
-              $async$goto = 16;
+              $async$goto = 19;
               break;
-            case 17:
+            case 20:
               // else
-              body = B.C_JsonCodec.decode$2$reviver(0, A.encodingForCharset(J.$index$asx(A._contentTypeForHeaders(t2).parameters._collection$_map, "charset")).decode$1(0, t3), null);
-            case 16:
+              body = B.C_JsonCodec.decode$2$reviver(0, A.encodingForCharset(J.$index$asx(A._contentTypeForHeaders(t3).parameters._collection$_map, "charset")).decode$1(0, t2), null);
+            case 19:
               // join
               $async$handler = 2;
               // goto after finally
-              $async$goto = 14;
+              $async$goto = 17;
               break;
-            case 12:
+            case 15:
               // catch
-              $async$handler = 11;
+              $async$handler = 14;
               $async$exception = $async$currentError;
               if (type$.FormatException._is(A.unwrapException($async$exception)))
                 body = null;
               else
                 throw $async$exception;
               // goto after finally
-              $async$goto = 14;
+              $async$goto = 17;
               break;
-            case 11:
+            case 14:
               // uncaught
               // goto rethrow
               $async$goto = 2;
               break;
-            case 14:
+            case 17:
               // after finally
+            case 12:
+              // join
             case 9:
               // join
             case 7:
@@ -27522,25 +27563,27 @@
   A._PotBody.prototype = {
     call$0() {
       var t1, _this = this;
-      if (_this._object == null) {
+      if (!_this._hasObject) {
         t1 = _this.get$reset(_this);
         A._extension_1_removeFromScope($.Pot__scopedResetters, t1, true);
         B.JSArray_methods.add$1($.Pot__scopedResetters[0], t1);
         _this.set$_object(_this._factory.call$0());
+        _this._hasObject = true;
         _this._prevScope = _this._scope = 0;
       }
       t1 = _this._object;
-      t1.toString;
-      return t1;
+      return t1 == null ? A._instanceType(_this)._precomputed1._as(t1) : t1;
     },
     reset$0(_) {
-      var t1, _this = this,
-        object = _this._object;
-      if (object != null) {
+      var t1, t2, _this = this;
+      if (_this._hasObject) {
         t1 = _this._disposer;
-        if (t1 != null)
-          t1.call$1(object);
+        if (t1 != null) {
+          t2 = _this._object;
+          t1.call$1(t2 == null ? A._instanceType(_this)._precomputed1._as(t2) : t2);
+        }
         _this.set$_object(null);
+        _this._hasObject = false;
         _this._scope = null;
         A._extension_1_removeFromScope($.Pot__scopedResetters, _this.get$reset(_this), false);
       }
@@ -27604,6 +27647,7 @@
       return t1;
     }
   };
+  A.RealtimeCloseEvent.prototype = {};
   A.RealtimeClient.prototype = {
     get$encode() {
       var t1 = this.__RealtimeClient_encode_A;
@@ -27615,7 +27659,7 @@
       t1 === $ && A.throwLateFieldNI("decode");
       return t1;
     },
-    RealtimeClient$12$decode$encode$headers$heartbeatIntervalMs$logLevel$logger$longpollerTimeout$params$reconnectAfterMs$timeout$transport(endPoint, decode, encode, headers, heartbeatIntervalMs, logLevel, logger, longpollerTimeout, params, reconnectAfterMs, timeout, transport) {
+    RealtimeClient$13$decode$encode$headers$heartbeatIntervalMs$httpClient$logLevel$logger$longpollerTimeout$params$reconnectAfterMs$timeout$transport(endPoint, decode, encode, headers, heartbeatIntervalMs, httpClient, logLevel, logger, longpollerTimeout, params, reconnectAfterMs, timeout, transport) {
       var t2, customJWT, _this = this,
         t1 = _this.params,
         eventsPerSecond = t1.$index(0, "eventsPerSecond");
@@ -27751,14 +27795,15 @@
         t1[_i].call$0();
     },
     _onConnClose$0() {
-      var _i, _this = this,
-        t1 = _this.conn,
-        $event = t1 == null ? null : t1._closeReason;
-      if ($event == null)
-        $event = "";
+      var $event, _i, _this = this,
+        t1 = _this.conn;
+      if ((t1 == null ? null : t1._closeCode) != null)
+        $event = new A.RealtimeCloseEvent();
+      else
+        $event = null;
       _this.log$3("transport", "close", $event);
       if (_this.connState === B.SocketStates_3) {
-        _this._triggerChanError$1($event);
+        _this._triggerChanError$0();
         t1 = _this.__RealtimeClient_reconnectTimer_A;
         t1 === $ && A.throwLateFieldNI("reconnectTimer");
         t1.scheduleTimeout$0();
@@ -27775,17 +27820,17 @@
     _onConnError$1(error) {
       var t1, _i;
       this.log$2("transport", J.toString$0$(error));
-      this._triggerChanError$1(error);
+      this._triggerChanError$0();
       t1 = this.stateChangeCallbacks.$index(0, "error");
       t1.toString;
       _i = 0;
       for (; false; ++_i)
         t1[_i].call$1(error);
     },
-    _triggerChanError$1(error) {
+    _triggerChanError$0() {
       var t1, _i;
       for (t1 = this.channels, _i = 0; false; ++_i)
-        t1[_i].trigger$2(A.ChannelEventsExtended_eventName(B.ChannelEvents_1), error);
+        t1[_i].trigger$1(A.ChannelEventsExtended_eventName(B.ChannelEvents_1));
     },
     _appendParams$2(url, params) {
       var endpoint, t1;
@@ -29499,10 +29544,12 @@
     send$1(_, request) {
       var $async$goto = 0,
         $async$completer = A._makeAsyncAwaitCompleter(type$.StreamedResponse),
-        $async$returnValue, $async$self = this, authBearer, t1, t2;
+        $async$returnValue, $async$handler = 2, $async$currentError, $async$self = this, exception, authBearer, t1, t2, $async$exception;
       var $async$send$1 = A._wrapJsFunctionForAsync(function($async$errorCode, $async$result) {
-        if ($async$errorCode === 1)
-          return A._asyncRethrow($async$result, $async$completer);
+        if ($async$errorCode === 1) {
+          $async$currentError = $async$result;
+          $async$goto = $async$handler;
+        }
         while (true)
           switch ($async$goto) {
             case 0:
@@ -29514,10 +29561,29 @@
               break;
             case 3:
               // then
-              $async$goto = 5;
+              $async$handler = 6;
+              $async$goto = 9;
               return A._asyncAwait(t1.refreshSession$0(), $async$send$1);
-            case 5:
+            case 9:
               // returning from await.
+              $async$handler = 2;
+              // goto after finally
+              $async$goto = 8;
+              break;
+            case 6:
+              // catch
+              $async$handler = 5;
+              $async$exception = $async$currentError;
+              // goto after finally
+              $async$goto = 8;
+              break;
+            case 5:
+              // uncaught
+              // goto rethrow
+              $async$goto = 2;
+              break;
+            case 8:
+              // after finally
             case 4:
               // join
               t1 = t1._currentSession;
@@ -29534,6 +29600,9 @@
             case 1:
               // return
               return A._asyncReturn($async$returnValue, $async$completer);
+            case 2:
+              // rethrow
+              return A._asyncRethrow($async$currentError, $async$completer);
           }
       });
       return A._asyncStartSync($async$send$1, $async$completer);
@@ -29708,8 +29777,8 @@
     call$1($event) {
       var t1;
       type$.CloseEvent._as($event);
-      $event.code;
       t1 = this.$this;
+      t1._closeCode = $event.code;
       t1._closeReason = $event.reason;
       t1 = t1._html0$_controller.__StreamChannelController__local_F;
       t1 === $ && A.throwLateFieldNI("_local");
@@ -29970,7 +30039,7 @@
       _inherit = hunkHelpers.inherit,
       _inheritMany = hunkHelpers.inheritMany;
     _inherit(A.Object, null);
-    _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, J.ArrayIterator, A.StreamTransformerBase, A.Converter, A.Iterable, A.CastIterator, A.Closure, A.MapBase, A.Error, A.ListBase, A.SentinelValue, A.ListIterator, A.MappedIterator, A.WhereIterator, A.ExpandIterator, A.TakeIterator, A.SkipIterator, A.EmptyIterator, A.WhereTypeIterator, A.FixedLengthListMixin, A.UnmodifiableListMixin, A.MapView, A.ConstantMap, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A.ExceptionAndStackTrace, A._StackTrace, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.JSSyntaxRegExp, A._MatchImplementation, A._AllMatchesIterator, A.StringMatch, A._StringAllMatchesIterator, A._Cell, A._InitializedCell, A.Rti, A._FunctionParameters, A._Type, A._TimerImpl, A._AsyncAwaitCompleter, A._IterationMarker, A._SyncStarIterator, A.AsyncError, A.Stream, A._BufferingStreamSubscription, A._BroadcastStreamController, A.TimeoutException, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A._StreamController, A._SyncStreamControllerDispatch, A._AsyncStreamControllerDispatch, A._StreamSinkWrapper, A._DelayedEvent, A._DelayedDone, A._PendingEvents, A._DoneStreamSubscription, A._StreamIterator, A._Zone, A._HashMapKeyIterator, A.SetBase, A._HashSetIterator, A._LinkedHashSetCell, A._LinkedHashSetIterator, A._UnmodifiableMapMixin, A.Codec, A._Base64Encoder, A._Base64Decoder, A.ByteConversionSink, A._JsonStringifier, A._Utf8Encoder, A._Utf8Decoder, A.DateTime, A.Duration, A._Enum, A.OutOfMemoryError, A.StackOverflowError, A._Exception, A.FormatException, A.MapEntry, A.Null, A._StringStackTrace, A.StringBuffer, A._Uri, A.UriData, A._SimpleUri, A.CssStyleDeclarationBase, A.Events, A.EventStreamProvider, A._EventStreamSubscription, A.ImmutableListMixin, A.FixedSizeListIterator, A._StructuredClone, A._AcceptStructuredClone, A.NullRejectionException, A.DelegatingStreamSink, A.AsyncPhase, A.ByteReader, A.ByteWriter, A.Component, A.State, A.ConfigDev, A.ChangeNotifier, A.Equatable, A.HtmlImpl, A.Disposable, A.CategoriesDao, A.PostsDao, A.CanonicalizedMap, A.DefaultEquality, A.IterableEquality, A.ListEquality, A._UnorderedEquality, A._MapEntry, A.MapEquality, A.DeepCollectionEquality, A.FunctionsClient, A.GotrueFetch, A.GoTrueAdminApi, A.GoTrueAdminMFAApi, A.GoTrueClient, A.GoTrueMFAApi, A.AuthException, A.AuthResponse, A.AuthState, A.FetchOptions, A.Factor, A.Session, A.User, A.UserIdentity, A.BaseClient, A.BaseRequest, A.BaseResponse, A.ClientException, A.MediaType, A.DateSymbols, A.DateFormat, A._DateFormatField, A.UninitializedLocaleData, A.LocaleDataException, A._AppBinding_Object_SchedulerBinding, A.DomNodeData, A.EventBinding, A.Renderer, A.SchedulerBinding, A.SyncBinding, A.BuildOwner, A.ComponentsBinding, A.Element, A._InactiveElements, A.RenderElement, A.GrabElement, A.StatelessGrabMixin, A.NavigatorImpl, A.Route, A.Context, A._PathDirection, A._PathRelation, A.Style, A.ParsedPath, A.PathException, A.PostgrestClient, A.PostgrestBuilder, A.PostgrestException, A.PostgrestResponse, A.FetchOptions0, A._PotBody, A.Message, A.RealtimeClient, A.RetryTimer, A._Wrapper, A.ForwardingSink, A._Empty, A.ErrorAndStackTrace, A._MultiControllerSink, A.SourceFile, A.SourceLocationMixin, A.SourceSpanMixin, A.Highlighter, A._Highlight, A._Line, A.SourceLocation, A.SourceSpanException, A.StorageBucketApi, A.StreamChannelMixin, A._GuaranteeSink, A.StreamChannelController, A.StringScanner, A.SupabaseClient, A.WebSocketChannelException, A.YAJsonIsolate]);
+    _inheritMany(A.Object, [A.JS_CONST, J.Interceptor, J.ArrayIterator, A.StreamTransformerBase, A.Converter, A.Iterable, A.CastIterator, A.Closure, A.MapBase, A.Error, A.ListBase, A.SentinelValue, A.ListIterator, A.MappedIterator, A.WhereIterator, A.ExpandIterator, A.TakeIterator, A.SkipIterator, A.EmptyIterator, A.WhereTypeIterator, A.FixedLengthListMixin, A.UnmodifiableListMixin, A.MapView, A.ConstantMap, A.TypeErrorDecoder, A.NullThrownFromJavaScriptException, A.ExceptionAndStackTrace, A._StackTrace, A.LinkedHashMapCell, A.LinkedHashMapKeyIterator, A.JSSyntaxRegExp, A._MatchImplementation, A._AllMatchesIterator, A.StringMatch, A._StringAllMatchesIterator, A._Cell, A._InitializedCell, A.Rti, A._FunctionParameters, A._Type, A._TimerImpl, A._AsyncAwaitCompleter, A._IterationMarker, A._SyncStarIterator, A.AsyncError, A.Stream, A._BufferingStreamSubscription, A._BroadcastStreamController, A.TimeoutException, A._Completer, A._FutureListener, A._Future, A._AsyncCallbackEntry, A._StreamController, A._SyncStreamControllerDispatch, A._AsyncStreamControllerDispatch, A._StreamSinkWrapper, A._DelayedEvent, A._DelayedDone, A._PendingEvents, A._DoneStreamSubscription, A._StreamIterator, A._Zone, A._HashMapKeyIterator, A.SetBase, A._HashSetIterator, A._LinkedHashSetCell, A._LinkedHashSetIterator, A._UnmodifiableMapMixin, A.Codec, A._Base64Encoder, A._Base64Decoder, A.ByteConversionSink, A._JsonStringifier, A._Utf8Encoder, A._Utf8Decoder, A.DateTime, A.Duration, A._Enum, A.OutOfMemoryError, A.StackOverflowError, A._Exception, A.FormatException, A.MapEntry, A.Null, A._StringStackTrace, A.StringBuffer, A._Uri, A.UriData, A._SimpleUri, A.CssStyleDeclarationBase, A.Events, A.EventStreamProvider, A._EventStreamSubscription, A.ImmutableListMixin, A.FixedSizeListIterator, A._StructuredClone, A._AcceptStructuredClone, A.NullRejectionException, A.DelegatingStreamSink, A.AsyncPhase, A.ByteReader, A.ByteWriter, A.Component, A.State, A.ConfigDev, A.ChangeNotifier, A.Equatable, A.HtmlImpl, A.Disposable, A.CategoriesDao, A.PostsDao, A.CanonicalizedMap, A.DefaultEquality, A.IterableEquality, A.ListEquality, A._UnorderedEquality, A._MapEntry, A.MapEquality, A.DeepCollectionEquality, A.FunctionsClient, A.GotrueFetch, A.GoTrueAdminApi, A.GoTrueAdminMFAApi, A.GoTrueClient, A.GoTrueMFAApi, A.AuthException, A.AuthResponse, A.AuthState, A.FetchOptions, A.Factor, A.Session, A.User, A.UserIdentity, A.BaseClient, A.BaseRequest, A.BaseResponse, A.ClientException, A.MediaType, A.DateSymbols, A.DateFormat, A._DateFormatField, A.UninitializedLocaleData, A.LocaleDataException, A._AppBinding_Object_SchedulerBinding, A.DomNodeData, A.EventBinding, A.Renderer, A.SchedulerBinding, A.SyncBinding, A.BuildOwner, A.ComponentsBinding, A.Element, A._InactiveElements, A.RenderElement, A.GrabElement, A.StatelessGrabMixin, A.NavigatorImpl, A.Route, A.Context, A._PathDirection, A._PathRelation, A.Style, A.ParsedPath, A.PathException, A.PostgrestClient, A.PostgrestBuilder, A.PostgrestException, A.PostgrestResponse, A.FetchOptions0, A._PotBody, A.Message, A.RealtimeCloseEvent, A.RealtimeClient, A.RetryTimer, A._Wrapper, A.ForwardingSink, A._Empty, A.ErrorAndStackTrace, A._MultiControllerSink, A.SourceFile, A.SourceLocationMixin, A.SourceSpanMixin, A.Highlighter, A._Highlight, A._Line, A.SourceLocation, A.SourceSpanException, A.StorageBucketApi, A.StreamChannelMixin, A._GuaranteeSink, A.StreamChannelController, A.StringScanner, A.SupabaseClient, A.WebSocketChannelException, A.YAJsonIsolate]);
     _inheritMany(J.Interceptor, [J.JSBool, J.JSNull, J.JavaScriptObject, J.JSNumber, J.JSString]);
     _inheritMany(J.JavaScriptObject, [J.LegacyJavaScriptObject, J.JSArray, A.NativeByteBuffer, A.NativeTypedData, A.EventTarget, A.AccessibleNodeList, A.Blob, A.Event, A.CssTransformComponent, A.CssRule, A._CssStyleDeclaration_JavaScriptObject_CssStyleDeclarationBase, A.CssStyleValue, A.DataTransferItemList, A.DomException, A._DomRectList_JavaScriptObject_ListMixin, A.DomRectReadOnly, A._DomStringList_JavaScriptObject_ListMixin, A.DomTokenList, A._FileList_JavaScriptObject_ListMixin, A.Gamepad, A.History, A._HtmlCollection_JavaScriptObject_ListMixin, A.ImageData, A.Location, A.MediaList, A._MidiInputMap_JavaScriptObject_MapMixin, A._MidiOutputMap_JavaScriptObject_MapMixin, A.MimeType, A._MimeTypeArray_JavaScriptObject_ListMixin, A._NodeList_JavaScriptObject_ListMixin, A.Plugin, A._PluginArray_JavaScriptObject_ListMixin, A._RtcStatsReport_JavaScriptObject_MapMixin, A.SharedArrayBuffer, A.SpeechGrammar, A._SpeechGrammarList_JavaScriptObject_ListMixin, A.SpeechRecognitionResult, A._Storage_JavaScriptObject_MapMixin, A.StyleSheet, A._TextTrackCueList_JavaScriptObject_ListMixin, A.TimeRanges, A.Touch, A._TouchList_JavaScriptObject_ListMixin, A.TrackDefaultList, A.Url, A.__CssRuleList_JavaScriptObject_ListMixin, A.__GamepadList_JavaScriptObject_ListMixin, A.__NamedNodeMap_JavaScriptObject_ListMixin, A.__SpeechRecognitionResultList_JavaScriptObject_ListMixin, A.__StyleSheetList_JavaScriptObject_ListMixin, A.Length, A._LengthList_JavaScriptObject_ListMixin, A.Number, A._NumberList_JavaScriptObject_ListMixin, A.PointList, A._StringList_JavaScriptObject_ListMixin, A.Transform, A._TransformList_JavaScriptObject_ListMixin, A.AudioBuffer, A._AudioParamMap_JavaScriptObject_MapMixin]);
     _inheritMany(J.LegacyJavaScriptObject, [J.PlainJavaScriptObject, J.UnknownJavaScriptObject, J.JavaScriptFunction, A._JasprConfig, A._ComponentConfig]);
@@ -30762,11 +30831,11 @@
     B.List_oKF = A._setArrayType(makeConstList(["Before Christ", "Anno Domini"]), type$.JSArray_String);
     B.List_sublist = A._setArrayType(makeConstList(["sublist"]), type$.JSArray_String);
     B.List_23h = A._setArrayType(makeConstList(["X-Client-Info"]), type$.JSArray_String);
-    B.Map_23CNd = new A.ConstantStringMap(1, {"X-Client-Info": "gotrue-dart/1.12.1"}, B.List_23h, type$.ConstantStringMap_String_String);
-    B.Map_23Cjg = new A.ConstantStringMap(1, {"X-Client-Info": "supabase-dart/1.11.3"}, B.List_23h, type$.ConstantStringMap_String_String);
-    B.Map_23VSc = new A.ConstantStringMap(1, {"X-Client-Info": "postgrest-dart/1.5.0"}, B.List_23h, type$.ConstantStringMap_String_String);
-    B.Map_23xw8 = new A.ConstantStringMap(1, {"X-Client-Info": "realtime-dart/1.2.1"}, B.List_23h, type$.ConstantStringMap_String_String);
-    B.Map_23yHF = new A.ConstantStringMap(1, {"X-Client-Info": "storage-dart/1.5.2"}, B.List_23h, type$.ConstantStringMap_String_String);
+    B.Map_23CNd = new A.ConstantStringMap(1, {"X-Client-Info": "gotrue-dart/1.12.4"}, B.List_23h, type$.ConstantStringMap_String_String);
+    B.Map_23Cjg = new A.ConstantStringMap(1, {"X-Client-Info": "supabase-dart/1.11.9"}, B.List_23h, type$.ConstantStringMap_String_String);
+    B.Map_23IBZ = new A.ConstantStringMap(1, {"X-Client-Info": "realtime-dart/1.3.0"}, B.List_23h, type$.ConstantStringMap_String_String);
+    B.Map_23VSc = new A.ConstantStringMap(1, {"X-Client-Info": "postgrest-dart/1.5.1"}, B.List_23h, type$.ConstantStringMap_String_String);
+    B.Map_23yHF = new A.ConstantStringMap(1, {"X-Client-Info": "storage-dart/1.5.3"}, B.List_23h, type$.ConstantStringMap_String_String);
     B.List_4m4 = A._setArrayType(makeConstList([",all,", ",draft,"]), type$.JSArray_String);
     B.Map_4mhGA = new A.ConstantStringMap(2, {",all,": "All", ",draft,": "Draft"}, B.List_4m4, type$.ConstantStringMap_String_String);
     B.Map_empty0 = new A.ConstantStringMap(0, {}, B.List_empty, A.findType("ConstantStringMap<String,List<String>>"));

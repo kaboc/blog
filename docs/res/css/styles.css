@@ -353,6 +353,10 @@ main .markdown-body blockquote {
   background-color: #f0f0f0;
 }
 
+main .markdown-body input[type=checkbox] {
+  margin-right: 8px;
+}
+
 main #bottom-social-buttons {
   margin-top: 40px;
   text-align: center;
