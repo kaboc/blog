@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>リレーショナルDBへ回帰する傾向が面白い | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220812-01ga8wek5z"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202310141655"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="リレーショナルDBへ回帰する傾向が面白い | Kabolog"><meta name="description" content="従来のリレーショナル DB（以下、RDB）を好む自分にとって嬉しい時代になってきています。 大した情報ではないですが、たまたまこの記事にたどり着いた人が RDB の良さを振り返るきっかけとなることを期待して書きます。 RDBMS の実績 まずは RDB &#47; RDBMS をより敬いたくなる話。 ブログ: リチャード・ヒップとのSQLiteの秘話 下の二つの引用"><meta name="keywords" content="データベース"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220812-01ga8wek5z"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="リレーショナルDBへ回帰する傾向が面白い | Kabolog"><meta property="og:description" content="従来のリレーショナル DB（以下、RDB）を好む自分にとって嬉しい時代になってきています。 大した情報ではないですが、たまたまこの記事にたどり着いた人が RDB の良さを振り返るきっかけとなることを期待して書きます。 RDBMS の実績 まずは RDB &#47; RDBMS をより敬いたくなる話。 ブログ: リチャード・ヒップとのSQLiteの秘話 下の二つの引用"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>リレーショナルDBへ回帰する傾向が面白い | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220812-01ga8wek5z"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202310142130"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="リレーショナルDBへ回帰する傾向が面白い | Kabolog"><meta name="description" content="従来のリレーショナル DB（以下、RDB）を好む自分にとって嬉しい時代になってきています。 大した情報ではないですが、たまたまこの記事にたどり着いた人が RDB の良さを振り返るきっかけとなることを期待して書きます。 RDBMS の実績 まずは RDB &#47; RDBMS をより敬いたくなる話。 ブログ: リチャード・ヒップとのSQLiteの秘話 下の引用はこの"><meta name="keywords" content="データベース"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220812-01ga8wek5z"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="リレーショナルDBへ回帰する傾向が面白い | Kabolog"><meta property="og:description" content="従来のリレーショナル DB（以下、RDB）を好む自分にとって嬉しい時代になってきています。 大した情報ではないですが、たまたまこの記事にたどり着いた人が RDB の良さを振り返るきっかけとなることを期待して書きます。 RDBMS の実績 まずは RDB &#47; RDBMS をより敬いたくなる話。 ブログ: リチャード・ヒップとのSQLiteの秘話 下の引用はこの"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -9,8 +9,15 @@ gtag('config', 'G-8T92E4QR06');
 <h1 id="RDBMS%20%E3%81%AE%E5%AE%9F%E7%B8%BE">RDBMS の実績</h1>
 <p>まずは RDB / RDBMS をより敬いたくなる話。</p>
 <p><a href="https://okuranagaimo.blogspot.com/2021/07/sqlite.html" target="_blank" rel="noopener">ブログ: リチャード・ヒップとのSQLiteの秘話</a><br>
-下の二つの引用はこのリンク先からです。</p>
-<p>※リンク先の記事が消えました。翻訳記事だったようです。英語の<a href="https://corecursive.com/066-sqlite-with-richard-hipp/" target="_blank" rel="noopener">元記事はこちら</a>です。</p>
+下の引用はこのリンク先からです。</p>
+<aside class="note warn">
+<img src="../res/images/note-warn.svg" alt="warn" loading="lazy">
+<div>
+<p>リンク先の記事が消えました。<br>
+翻訳記事だったようです。<br>
+英語の<a href="https://corecursive.com/066-sqlite-with-richard-hipp/" target="_blank" rel="noopener">元記事はこちら</a>です。</p>
+</div>
+</aside>
 <h2 id="SQLite">SQLite</h2>
 <blockquote>
 <p>SQLiteは至る所にあります。ウェブブラウザにも、携帯電話にも、おそらく車の中にも、そして旅客機の中にも間違いなく存在します。iMessagesやWhatsAppのメッセージが保存されているのもSQLiteです。</p>
@@ -22,7 +29,12 @@ gtag('config', 'G-8T92E4QR06');
 </blockquote>
 <p>あらゆる場所で使われていて信頼性が非常に高いですね。<br>
 この記事を読むまで、Flutter でアプリを作るときに SQLite を使ったり別のものを使ってみたりしていましたが、もう全部 SQLite でいいと思うようになりました。</p>
-<p>※Dart では <a href="https://pub.dev/packages/drift" target="_blank" rel="noopener">Drift</a> が便利です。</p>
+<aside class="note info">
+<img src="../res/images/note-info.svg" alt="info" loading="lazy">
+<div>
+<p>Dart での SQLite の利用は <a href="https://pub.dev/packages/drift" target="_blank" rel="noopener">Drift</a> が便利です。</p>
+</div>
+</aside>
 <h2 id="PostgreSQL">PostgreSQL</h2>
 <blockquote>
 <p>彼は膨大な数のSQL文を作成し、手に入る限りのすべてのデータベースエンジンと比較しました。私たちは全員が同じ答えを得られるようにしたかったのですが、彼はPostgresを除いて、SQLiteを含む彼が試したすべてのデータベースエンジンをセグメンテーションフォールトさせることに成功しました。Postgresは常に実行され、正しい答えを出しました。私たちは、その中に欠点を見つけることはできませんでした。Postgresの人たちは、私たちの努力が足りなかっただけだと言っています。</p>
@@ -82,6 +94,6 @@ Go はサーバで動かすツールに向いていていいですね。</p>
 </ul>
 <h1 id="%E3%81%95%E3%81%84%E3%81%94%E3%81%AB">さいごに</h1>
 <p>RDB を時代遅れと見る人もいる一方で、良さを見直してツールを生み出す人もいるのが面白いです。<br>
-また個人開発者としては、安価で使いやすい方法が増えていて嬉しいです。<br>
-業務では、モバイルアプリ開発のプロジェクトに参加すると NoSQL が採用されていることが多く、選定理由は向き不向きを考慮した結果でもなく NoSQL しか知らないことだったりするので、両方を比較して判断できる人が増えてほしいと思います。</p>
+また個人開発者としては、安価で使いやすい方法が増えていて嬉しいです。</p>
+<p>業務では、モバイルアプリ開発のプロジェクトに参加すると NoSQL が採用されていることが多く、選定理由は向き不向きを考慮した結果でもなく NoSQL しか知らないことだったりするので、両方を比較して判断できる人が増えてほしいと思います。</p>
 </article><section id="bottom-social-buttons"><a href="https://twitter.com/share?url=https%3A%2F%2Fblog.kaboc.cc%2Fposts%2F20220812-01ga8wek5z&amp;text=%E3%83%AA%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%8A%E3%83%ABDB%E3%81%B8%E5%9B%9E%E5%B8%B0%E3%81%99%E3%82%8B%E5%82%BE%E5%90%91%E3%81%8C%E9%9D%A2%E7%99%BD%E3%81%84%20%7C%20Kabolog&amp;via=kabochapo" title="Xに投稿する" target="_blank" rel="noopener"><img src="../res/images/x-share-button.svg" alt="Xに投稿する" width="36" height="36" style="margin: 2px;"></a><a href="https://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="touch" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/v4/public/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="40" height="40" style="border: none;"></a><script async src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"></script></section></main></div><footer><p><a href="../">Kabolog</a></p><small>&copy; 2022 <a href="https://kaboc.cc/">kaboc</a></small></footer></div></body></html>

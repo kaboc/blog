@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202310141655"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta name="description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にすることにしました。 この記事は sealed 型の仕様書 をベースにし、他のいくつかのページのコード例も取り入れています。 コード例は少し改変しています。 続編 D"><meta name="keywords" content="Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta property="og:description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にすることにしました。 この記事は sealed 型の仕様書 をベースにし、他のいくつかのページのコード例も取り入れています。 コード例は少し改変しています。 続編 D"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202310142130"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta name="description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にすることにしました。 この記事は sealed 型の仕様書 をベースにし、他のいくつかのページのコード例も取り入れています。 コード例は少し改変しています。 続編： "><meta name="keywords" content="Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20230430-01gz8n170g"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dart 3のリリースに備えて - sealed型と進化したswitch | Kabolog"><meta property="og:description" content="Dart 3 では多くの新機能が加わって進化しています。 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にすることにしました。 この記事は sealed 型の仕様書 をベースにし、他のいくつかのページのコード例も取り入れています。 コード例は少し改変しています。 続編： "><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -8,10 +8,12 @@ gtag('config', 'G-8T92E4QR06');
 その全てをすぐに使いこなすのは難しそうなので準備として数ヶ月前に仕様をひととおり読んだのですが、もう忘れてきているのでできる範囲で記事にすることにしました。</p>
 <p>この記事は <a href="https://github.com/dart-lang/language/blob/main/accepted/future-releases/sealed-types/feature-specification.md" target="_blank" rel="noopener">sealed 型の仕様書</a> をベースにし、他のいくつかのページのコード例も取り入れています。<br>
 コード例は少し改変しています。</p>
-<p><strong>続編</strong></p>
-<ul>
-<li><a href="https://blog.kaboc.cc/posts/20230510-01h02zbtpc" target="_blank" rel="noopener">Dart 3のリリースに備えて - record型とpatterns</a></li>
-</ul>
+<aside class="note info">
+<img src="../res/images/note-info.svg" alt="info" loading="lazy">
+<div>
+<p>続編： <a href="https://blog.kaboc.cc/posts/20230510-01h02zbtpc" target="_blank" rel="noopener">Dart 3のリリースに備えて - record型とpatterns</a></p>
+</div>
+</aside>
 <h1 id="sealed%20%E5%9E%8B%E3%81%A7%E5%8F%AF%E8%83%BD%E3%81%AB%E3%81%AA%E3%82%8B%E3%81%93%E3%81%A8">sealed 型で可能になること</h1>
 <p><code>sealed</code> を付けると、サブタイプを利用するときに網羅性をチェックできるようになります。</p>
 <h2 id="%E5%BE%93%E6%9D%A5%E3%81%AE%E6%96%B9%E6%B3%95">従来の方法</h2>
@@ -119,8 +121,13 @@ class Circle extends Shape {
 <p>An object pattern matches values of a given named type and then extracts values from it by calling getters on the value. Object patterns let users destructure data from arbitrary objects using the getters the object's class already exposes.</p>
 </blockquote>
 <h3 id="%E4%BB%96%E3%81%AE%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3">他のパターン</h3>
-<p>この記事では他に relational pattern について後述します。<br>
-残りの様々なパターンのいくつかは <a href="https://blog.kaboc.cc/posts/20230510-01h02zbtpc" target="_blank" rel="noopener">続編記事</a> に書いていますので、そちらもお読みください。</p>
+<p>この記事では他に relational pattern について後述します。</p>
+<aside class="note info">
+<img src="../res/images/note-info.svg" alt="info" loading="lazy">
+<div>
+<p>残りの様々なパターンのいくつかは <a href="https://blog.kaboc.cc/posts/20230510-01h02zbtpc" target="_blank" rel="noopener">続編記事</a> に書いていますので、そちらもお読みください。</p>
+</div>
+</aside>
 <h2 id="switch%20%E5%BC%8F">switch 式</h2>
 <p>switch を式として使うこともできるようになりました。<br>
 式では case のキーワードは使わずに <code>パターン =&gt; 返す値</code> の形の簡潔な記述になります。<br>

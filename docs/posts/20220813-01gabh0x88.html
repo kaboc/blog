@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PocketBaseハンズオン | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220813-01gabh0x88"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202310141655"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="PocketBaseハンズオン | Kabolog"><meta name="description" content="7&#47;7 頃に公開されました。 概要は下のツイートのとおりです。 PocketBaseリアルタイムDB、Auth、Storage、ダッシュボードがあってミニSupabaseみたい。SQLiteのドライバはmodernc .org&#47;sqliteなのでCGO不要。安価なVPS(最適化なし)でもリアルタイムDBで1万+の同時接続。Goのサーバのフレームワークとしても"><meta name="keywords" content="バックエンド,データベース,Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220813-01gabh0x88"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="PocketBaseハンズオン | Kabolog"><meta property="og:description" content="7&#47;7 頃に公開されました。 概要は下のツイートのとおりです。 PocketBaseリアルタイムDB、Auth、Storage、ダッシュボードがあってミニSupabaseみたい。SQLiteのドライバはmodernc .org&#47;sqliteなのでCGO不要。安価なVPS(最適化なし)でもリアルタイムDBで1万+の同時接続。Goのサーバのフレームワークとしても"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>PocketBaseハンズオン | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220813-01gabh0x88"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202310142130"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="PocketBaseハンズオン | Kabolog"><meta name="description" content="7&#47;7 頃に公開されました。 概要は下のツイートのとおりです。 PocketBaseリアルタイムDB、Auth、Storage、ダッシュボードがあってミニSupabaseみたい。SQLiteのドライバはmodernc .org&#47;sqliteなのでCGO不要。安価なVPS(最適化なし)でもリアルタイムDBで1万+の同時接続。Goのサーバのフレームワークとしても"><meta name="keywords" content="バックエンド,データベース,Dart"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220813-01gabh0x88"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="PocketBaseハンズオン | Kabolog"><meta property="og:description" content="7&#47;7 頃に公開されました。 概要は下のツイートのとおりです。 PocketBaseリアルタイムDB、Auth、Storage、ダッシュボードがあってミニSupabaseみたい。SQLiteのドライバはmodernc .org&#47;sqliteなのでCGO不要。安価なVPS(最適化なし)でもリアルタイムDBで1万+の同時接続。Goのサーバのフレームワークとしても"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -13,7 +13,14 @@ gtag('config', 'G-8T92E4QR06');
 <li><a href="https://pocketbase.io/" target="_blank" rel="noopener">https://pocketbase.io/</a></li>
 <li><a href="https://github.com/pocketbase/pocketbase" target="_blank" rel="noopener">https://github.com/pocketbase/pocketbase</a></li>
 </ul>
-<p>※記事を書いている時点でまだ v1.0.0 未満です。活発に開発が進んでいて完全な後方互換性は保証できないとのことです。自己責任でお使いください。</p>
+<aside class="note warn">
+<img src="../res/images/note-warn.svg" alt="warn" loading="lazy">
+<div>
+<p>記事を書いている時点でまだ v1.0.0 未満です。<br>
+活発に開発が進んでいて完全な後方互換性は保証できないとのことです。<br>
+自己責任でお使いください。</p>
+</div>
+</aside>
 <h1 id="%E3%81%93%E3%81%AE%E8%A8%98%E4%BA%8B%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6">この記事について</h1>
 <p>7 月末に <a href="https://pub.dev/packages/pocketbase" target="_blank" rel="noopener">Dart の SDK</a> がリリースされたので、ごく基本的なところ、特にデータベースの基礎だけでも触ってつかんでおこうということで試してまとめたものです。</p>
 <ul>
@@ -22,10 +29,15 @@ gtag('config', 'G-8T92E4QR06');
 <li>Go のサーバのフレームワークとしても使えますが、今回は BaaS っぽい使い方に限っています</li>
 <li>コード例には Dart を用い、実行結果も Dart の場合のものです</li>
 </ul>
+<aside class="note info">
+<img src="../res/images/note-info.svg" alt="info" loading="lazy">
+<div>
 <p>関連する記事として、PocketBase を含む RDB 関連サービス/ツールの盛り上がりについて先日書きましたので、そちらもお読みください。</p>
 <ul>
 <li><a href="https://blog.kaboc.cc/posts/20220812-01ga8wek5z" target="_blank" rel="noopener">リレーショナルDBへ回帰する傾向が面白い</a></li>
 </ul>
+</div>
+</aside>
 <h1 id="%E3%81%8B%E3%82%8F%E3%81%84%E3%81%84%E3%81%AE%E3%82%82%E9%AD%85%E5%8A%9B">かわいいのも魅力</h1>
 <p>個人により開発されていますが、デザインがプロフェッショナルです。<br>
 ホームページも管理画面も堅苦しくなくて、ほんのりとかわいらしさがあります。</p>
@@ -59,7 +71,13 @@ Docker もいらず、あまりに手軽なので、もうこの時点で虜に�
 <p><img src="https://mxfyaoprdbheocgwuqnv.supabase.co/storage/v1/object/public/blog-images/9f8628a740b1bdd233465745.jpg" alt="ユーザ一覧" loading="lazy"></p>
 <p>アバターを設定できる点もいいですね。<br>
 アプリで使うアバターの機能がこれに依存すると、その機能が存在しない別サービスに移行するときに困るかもしれませんが。</p>
-<p>※でたらめなメールアドレスで試すときにはご注意ください。万一実在すると確認メールが届いて迷惑になるので、「Send verification email」をオフにしましょう。</p>
+<aside class="note warn">
+<img src="../res/images/note-warn.svg" alt="warn" loading="lazy">
+<div>
+<p>でたらめなメールアドレスで試すときにはご注意ください。<br>
+万一実在すると確認メールが届いて迷惑になるので、「Send verification email」をオフにしましょう。</p>
+</div>
+</aside>
 <p>※プロフィールやカラムのデータに日本語は使えます<s>が、Enter キーで保存するようになっているようで、変換確定のための Enter でも保存して閉じられてしまいます。今後の改善に期待…</s>。（改善されていました）</p>
 <h2 id="Dart%20%E3%81%A7%E3%83%A6%E3%83%BC%E3%82%B6%E8%AA%8D%E8%A8%BC">Dart でユーザ認証</h2>
 <p>設定したメールアドレスとパスワードでログインしてみます。</p>
@@ -275,7 +293,7 @@ v1.0 に達したときが無難ですが、フィードバックがある程度
 バックエンドに処理をまとめたほうがクライアントがシンプルになるというのもあります。</p>
 <p>でも、フロントエンドな人にはきっと a のほうが魅力ですね。</p>
 <p>迷うところですが、選択肢があるのは嬉しいことなので、運用方法などを考えながら前向きに迷いましょう。</p>
-<h1 id="%E3%81%BE%E3%81%A8%E3%82%81">まとめ</h1>
+<h1 id="%E3%81%95%E3%81%84%E3%81%94%E3%81%AB">さいごに</h1>
 <p>PocketBase には可能性が感じられて期待できます。<br>
 こんなに素晴らしいものが OSS として提供されているのはありがたいですね。<br>
 しばらく見守りたいと思います。</p>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Zig + Dart（FFI &#47; Wasm）の可能性 | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220819-01gatw3173"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202310141655"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Zig + Dart（FFI &#47; Wasm）の可能性 | Kabolog"><meta name="description" content="Dart で他の言語を利用するのは Go で試みたことがあります。 gomobile で作ったライブラリ + Flutter の Platform Channel アプリ開発にgomobileを利用する（Android&#47;iOS&#47;Flutter） - Qiita Go で作ったライブラリ + Dart FFI kaboc&#47;dart-ffi_cgo_ojicha"><meta name="keywords" content="Zig,Dart,FFI"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220819-01gatw3173"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Zig + Dart（FFI &#47; Wasm）の可能性 | Kabolog"><meta property="og:description" content="Dart で他の言語を利用するのは Go で試みたことがあります。 gomobile で作ったライブラリ + Flutter の Platform Channel アプリ開発にgomobileを利用する（Android&#47;iOS&#47;Flutter） - Qiita Go で作ったライブラリ + Dart FFI kaboc&#47;dart-ffi_cgo_ojicha"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Zig + Dart（FFI &#47; Wasm）の可能性 | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20220819-01gatw3173"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202310142130"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Zig + Dart（FFI &#47; Wasm）の可能性 | Kabolog"><meta name="description" content="Dart で他の言語を利用するのは Go で試みたことがあります。 gomobile で作ったライブラリ + Flutter の Platform Channel アプリ開発にgomobileを利用する（Android&#47;iOS&#47;Flutter） - Qiita Go で作ったライブラリ + Dart FFI kaboc&#47;dart-ffi_cgo_ojicha"><meta name="keywords" content="Zig,Dart,FFI"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20220819-01gatw3173"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Zig + Dart（FFI &#47; Wasm）の可能性 | Kabolog"><meta property="og:description" content="Dart で他の言語を利用するのは Go で試みたことがあります。 gomobile で作ったライブラリ + Flutter の Platform Channel アプリ開発にgomobileを利用する（Android&#47;iOS&#47;Flutter） - Qiita Go で作ったライブラリ + Dart FFI kaboc&#47;dart-ffi_cgo_ojicha"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -101,24 +101,31 @@ Windows では DLL です。<br>
 <p>出来上がった DLL ファイルは 4.5 KB でした。<br>
 <code>-O</code> の最適化のフラグを指定しないと数百 KB になり、動作速度も遅くなります。</p>
 <h3 id="%E3%82%AF%E3%83%AD%E3%82%B9%E3%82%B3%E3%83%B3%E3%83%91%E3%82%A4%E3%83%AB">クロスコンパイル</h3>
-<p>ターゲットを <code>-target</code> で指定するだけでできます。<br>
-https://ziglang.org/learn/overview/#cross-compiling-is-a-first-class-use-case</p>
+<p>ターゲットを <code>-target</code> で指定するだけでできます。</p>
+<p><a href="https://ziglang.org/learn/overview/#cross-compiling-is-a-first-class-use-case" target="_blank" rel="noopener">https://ziglang.org/learn/overview/#cross-compiling-is-a-first-class-use-case</a></p>
 <p>試しに Windows 上で <code>-target x86_64-linux-gnu</code> を付けてビルドすると <code>libfibonacci.so</code> が作られ、ファイルサイズは DLL より大きめの 47.9 KB になりました。</p>
 <h2 id="Wasm%20%E3%82%92%E7%94%9F%E6%88%90">Wasm を生成</h2>
-<p>Dart では <a href="https://pub.dev/packages/wasm" target="_blank" rel="noopener">package:wasm</a> を使って Wasm のファイルを読み込んで利用することができます。<br>
-experimental ですが、興味深くて期待できるので試すことにしました。</p>
-<p>パッケージは最初のバージョンである 0.1.0+1 が一年ほど前に出てから更新されていません。<br>
-GitHub のそのリポジトリでは多少の動きはあるようです。</p>
 <pre><code class="language-shell">zig build-lib src/main.zig -dynamic --name fibonacci -O ReleaseSmall -target wasm32-freestanding  
 </code></pre>
-<p>クロスコンパイルと同じ要領で <code>-target wasm32-freestanding</code> を指定するだけです。<br>
-https://ziglang.org/documentation/master/#Freestanding</p>
+<p>クロスコンパイルと同じ要領で <code>-target wasm32-freestanding</code> を指定するだけです。</p>
+<p><a href="https://ziglang.org/documentation/master/#Freestanding" target="_blank" rel="noopener">https://ziglang.org/documentation/master/#Freestanding</a></p>
 <p>ファイルサイズは DLL とほぼ同じでした。</p>
-<p>wasm ファイルはプラットフォームが違っても共通なのでクロスコンパイルが不要で、Dart で使うときに分岐しなくていいので扱いやすいです。</p>
 <h1 id="Dart%20%E3%81%A7%E5%88%A9%E7%94%A8">Dart で利用</h1>
 <p>ライブラリと Wasm をそれぞれ Dart で使ってみます。<br>
 作った順序と逆に Wasm のほうから。</p>
 <h2 id="Wasm">Wasm</h2>
+<p>wasm ファイルはプラットフォームが違っても共通なのでクロスコンパイルが不要で、Dart で使うときに分岐しなくていいので扱いやすいです。</p>
+<p>Dart で利用するには <a href="https://pub.dev/packages/wasm" target="_blank" rel="noopener">package:wasm</a> を用います。<br>
+experimental ですが、興味深くて期待できるので試すことにしました。</p>
+<p>パッケージは最初のバージョンである 0.1.0+1 が一年ほど前に出てから更新されていません。<br>
+GitHub のそのリポジトリでは多少の動きはあるようです。</p>
+<aside class="note warn">
+<img src="../res/images/note-warn.svg" alt="warn" loading="lazy">
+<div>
+<p>package:wasm は残念ながら更新がないまま discontinued となってしまいました。<br>
+Wasm を Dart で利用することよりも Dart から Wasm を生成することに注力していることが理由になっているようで、そのことが GitHub の <a href="https://github.com/dart-archive/wasm" target="_blank" rel="noopener">README</a> と <a href="https://github.com/dart-archive/wasm/issues/146" target="_blank" rel="noopener">issue</a> に書かれています。</p>
+</div>
+</aside>
 <h3 id="%E6%BA%96%E5%82%99">準備</h3>
 <h4 id="%E3%83%84%E3%83%BC%E3%83%AB">ツール</h4>
 <p>package:wasm では WebAssembly のランタイムである Wasmer が用いられます。<br>

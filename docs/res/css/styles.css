@@ -362,7 +362,25 @@ main .markdown-body .note {
   flex-wrap: nowrap;
   align-items: flex-start;
   border-radius: 6px;
+  margin-bottom: 16px;
   padding: 16px;
+}
+
+main .markdown-body .note img {
+  margin-right: 12px;
+  background-color: transparent;
+}
+
+main .markdown-body .note div p {
+  margin: 16px 0;
+}
+
+main .markdown-body .note div :first-child {
+  margin-top: 0;
+}
+
+main .markdown-body .note div :last-child {
+  margin-bottom: 0;
 }
 
 main .markdown-body .note.info {
@@ -375,11 +393,6 @@ main .markdown-body .note.warn {
 
 main .markdown-body .note.alert {
   background-color: #faeef0;
-}
-
-main .markdown-body .note img {
-  margin-right: 12px;
-  background-color: transparent;
 }
 
 main .markdown-body .footnotes li {
