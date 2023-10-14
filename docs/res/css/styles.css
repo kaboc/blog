@@ -382,6 +382,15 @@ main .markdown-body .note img {
   background-color: transparent;
 }
 
+main .markdown-body .footnotes li {
+  padding-left: 6px;
+}
+
+main .markdown-body .footnotes li:target::before {
+  border: 2px dotted #669545;
+  background-color: #e5f5e555;
+}
+
 main #bottom-social-buttons {
   margin-top: 40px;
   text-align: center;
