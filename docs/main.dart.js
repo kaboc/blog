@@ -21804,7 +21804,7 @@
                 // Function start
                 t1 = type$.JSArray_Component;
                 $async$goto = 2;
-                return new A.DomComponent("header", null, null, null, null, null, null, A._setArrayType([A.p(A._setArrayType([A.span(A._setArrayType([B.Link_NHw], t1), null), A.span(A._setArrayType([A.Link$("https://kaboc.cc/", A.img("Home", 20, "res/images/home.svg", 20), false), A.Link$("https://twitter.com/kabochapo", A.img("Twitter", 20, "res/images/brand-twitter.svg", 20), true), A.Link$("https://github.com/kaboc", A.img("GitHub", 20, "res/images/brand-github.svg", 20), true)], t1), "top-social-buttons")], t1), null)], t1), null);
+                return new A.DomComponent("header", null, null, null, null, null, null, A._setArrayType([A.p(A._setArrayType([A.span(A._setArrayType([B.Link_NHw], t1), null), A.span(A._setArrayType([A.Link$("https://kaboc.cc/", A.img("Home", 20, "res/images/link-home.svg", 20), false), A.Link$("https://twitter.com/kabochapo", A.img("X", 20, "res/images/link-x.svg", 20), true), A.Link$("https://github.com/kaboc", A.img("GitHub", 20, "res/images/link-github.svg", 20), true)], t1), "top-social-buttons")], t1), null)], t1), null);
               case 2:
                 // after yield
                 $async$goto = 3;

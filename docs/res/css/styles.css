@@ -357,13 +357,38 @@ main .markdown-body input[type=checkbox] {
   margin-right: 8px;
 }
 
+main .markdown-body .note {
+  display:flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+main .markdown-body .note.info {
+  background-color: #e5f5e5;
+}
+
+main .markdown-body .note.warn {
+  background-color: #fff8dd;
+}
+
+main .markdown-body .note.alert {
+  background-color: #faeef0;
+}
+
+main .markdown-body .note img {
+  margin-right: 12px;
+  background-color: transparent;
+}
+
 main #bottom-social-buttons {
   margin-top: 40px;
   text-align: center;
 }
 
 main #bottom-social-buttons > * {
-  margin: 0 6px;
+  margin: 0 12px;
   padding: 0;
   text-decoration: none;
 }
