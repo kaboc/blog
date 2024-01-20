@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartの非同期処理の理解を深める（Tips編） | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202310142130"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta name="description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 非同期関連のことばかり書いていると飽きるので最終回とします。 シリーズ： 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 20 日目 -"><meta name="keywords" content="Dart,非同期処理"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta property="og:description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 非同期関連のことばかり書いていると飽きるので最終回とします。 シリーズ： 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 20 日目 -"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dartの非同期処理の理解を深める（Tips編） | Kabolog</title><link rel="canonical" href="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><link rel="author" href="http://www.hatena.ne.jp/kabochapo/"><link rel="shortcut icon" href="../favicon.ico"><link rel="icon" type="image/png" href="../res/images/android-chrome-192x192.png"><link rel="apple-touch-icon" href="../res/images/apple-touch-icon.png"><link rel="stylesheet" href="../res/css/styles.css?202401201235"><link rel="preload" href="../res/css/github-markdown-light.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><link rel="preload" href="../res/css/obsidian.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><meta name="title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta name="description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 非同期関連のことばかり書いていると飽きるので最終回とします。 シリーズ： 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 20 日目 -"><meta name="keywords" content="Dart,非同期処理"><meta name="author" content="kaboc"><meta property="og:type" content="article"><meta property="og:url" content="https://blog.kaboc.cc/posts/20221220-01gmqz2kpr"><meta property="og:image" content="https://blog.kaboc.cc/res/images/og-1200x630.jpg"><meta property="og:site_name" content="Kabolog"><meta property="og:title" content="Dartの非同期処理の理解を深める（Tips編） | Kabolog"><meta property="og:description" content="Dart Advent Calendar 2022 の 20 日目の記事です。 一昨日から非同期処理のシリーズとして書いています。 非同期関連のことばかり書いていると飽きるので最終回とします。 シリーズ： 18 日目 - Dartの非同期処理の理解を深める（キュー編） 19 日目 - Dartの非同期処理の理解を深める（エラーハンドリング編） 20 日目 -"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="https://blog.kaboc.cc/res/images/og-square.jpg"><meta name="twitter:site" content="@kabochapo"><meta name="twitter:creator" content="@kabochapo"><script defer src="../res/js/highlight.min.js"></script><script>window.onload = () => hljs.highlightAll();</script><script async src="https://www.googletagmanager.com/gtag/js?id=G-8T92E4QR06"></script>
 <script>
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -47,6 +47,14 @@ Future&lt;void&gt; main() async {
   print(results); // [1, 2, 3]  
 }  
 </code></pre>
+<aside class="note info">
+<img src="../res/images/note-info.svg" alt="info" loading="lazy">
+<div>
+<p>Dart 3.0 で record 型が導入されました。<br>
+そのバージョン以降では Future.wait の代わりに record の <code>wait</code> を利用すると型安全に扱うことができます。<br>
+⇒ <a href="https://blog.kaboc.cc/posts/20230510-01h02zbtpc" target="_blank" rel="noopener">Dartの非同期処理の理解を深める（Tips編）</a></p>
+</div>
+</aside>
 <h3 id="%E4%B8%80%E3%81%A4%E3%81%AE%E9%96%A2%E6%95%B0%E3%81%A7%E3%82%A8%E3%83%A9%E3%83%BC%E3%81%8C%E8%B5%B7%E3%81%93%E3%81%A3%E3%81%9F%E5%A0%B4%E5%90%88">一つの関数でエラーが起こった場合</h3>
 <p><code>asynchronousFunc2()</code> で例外を起こしてみましょう。</p>
 <pre><code class="language-dart">Future&lt;int&gt; asynchronousFunc2() async {  
@@ -276,7 +284,7 @@ Called at tick 7
 <aside class="note info">
 <img src="../res/images/note-info.svg" alt="info" loading="lazy">
 <div>
-<p>上記のデフォルトコンストラクタの他に <a href="https://pub.dev/documentation/async/latest/async/AsyncCache/AsyncCache.ephemeral.html" target="_blank" rel="noopener">AsyncCache.ephemeral</a> というコンストラクタもあり、コールバック関数が同時に実行されるのを防ぐのに利用できます。</p>
+<p>上記のデフォルトコンストラクタの他に <a href="https://pub.dev/documentation/async/latest/async/AsyncCache/AsyncCache.ephemeral.html" target="_blank" rel="noopener">AsyncCache.ephemeral</a> というコンストラクタもあり、何らかの処理が多重実行されるのを防ぐのに利用できます。</p>
 </div>
 </aside>
 <h1 id="await%20%E3%81%97%E3%81%AA%E3%81%84">await しない</h1>

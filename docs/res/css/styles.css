@@ -162,7 +162,7 @@ footer small {
     text-decoration: none;
   }
 
-  main .markdown-body pre {
+  main .markdown-body > pre {
     width: 100vw;
     margin: 0 calc(50% - 50vw) 16px;
     border-radius: initial;
@@ -349,7 +349,8 @@ main .markdown-body pre code {
 
 main .markdown-body blockquote {
   padding: 12px 1em;
-  border-left: .45em solid #90b575;
+  border-left: .7em solid #90b57566;
+  border-radius: 6px;
   background-color: #f0f0f0;
 }
 
@@ -371,15 +372,15 @@ main .markdown-body .note img {
   background-color: transparent;
 }
 
-main .markdown-body .note div p {
-  margin: 16px 0;
+main .markdown-body .note div {
+  min-width: 0;
 }
 
-main .markdown-body .note div :first-child {
+main .markdown-body .note div > :first-child {
   margin-top: 0;
 }
 
-main .markdown-body .note div :last-child {
+main .markdown-body .note div > :last-child {
   margin-bottom: 0;
 }
 
