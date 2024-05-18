@@ -13,6 +13,10 @@ gtag('config', 'G-8T92E4QR06');
 省略している部分があり、必要に応じて言い換えたり情報を少し補強したりもしています。</p>
 <p>動画のタイトルにアダプティブ UI という言葉が含まれているのに記事がレスポンシブのことばかりなのは、動画がそうだったからです。<br>
 デバイスの種類に依らない UI / レイアウトのことがほとんどで、アダプティブの話は入力のことと折りたたみスマホのこと、および federated plugin に関する過去動画の紹介（これは本記事では省略）くらいでした。</p>
+<h3 id="%E5%85%AC%E5%BC%8F%E3%83%89%E3%82%AD%E3%83%A5%E3%83%A1%E3%83%B3%E3%83%88">公式ドキュメント</h3>
+<p>公式ドキュメントにも専用のページがあります。<br>
+この記事を書いている時点では動画と被った内容になっていますが、ドキュメントのほうが少し詳しいかもしれません。</p>
+<p><a href="https://docs.flutter.dev/ui/adaptive-responsive" target="_blank" rel="noopener">Adaptive design | Flutter</a></p>
 <h2 id="SafeArea">SafeArea</h2>
 <ul>
 <li>ネストしても大丈夫
@@ -55,11 +59,8 @@ gtag('config', 'G-8T92E4QR06');
 <li>親から渡された constraints が得られる
 <ul>
 <li>ツリー上の特定箇所のサイズ情報を得ることができる</li>
-<li>固定サイズである Size ではなく最小～最大サイズの範囲である BoxConstraints
-<ul>
-<li>カスタムな widget を作るときには最大サイズを利用することが多い</li>
-</ul>
-</li>
+<li>固定サイズである Size ではなく最小～最大サイズの範囲である BoxConstraints</li>
+<li>カスタムな widget を作るときに有用（BoxConstraints の最大サイズを利用する）</li>
 </ul>
 </li>
 </ul>
@@ -108,19 +109,23 @@ gtag('config', 'G-8T92E4QR06');
 </li>
 </ul>
 <h2 id="%E3%83%AC%E3%82%B9%E3%83%9D%E3%83%B3%E3%82%B7%E3%83%96%E3%81%AE%E5%85%B7%E4%BD%93%E4%BE%8B">レスポンシブの具体例</h2>
-<p>画面の一部が押されたときにコンテンツの表示をウインドウサイズで分岐して、狭ければ全画面、広ければダイアログにする例でした。<br>
-自分で作るなら、全画面表示は通常の画面として作って普通に遷移し、ダイアログは <code>showDialog()</code> で開くという実装にしそうですが、動画ではどちらにも <code>Dialog</code> + <code>showDialog()</code> を使っていて参考になりました。</p>
+<p>紹介されていたいくつかの例の中で、ウインドウの幅が狭ければ全画面、広ければダイアログでコンテンツを表示する例が特に参考になりました。</p>
+<p>自分で作るなら全画面表示は通常の画面として作りそうですが、動画ではどちらにも <code>Dialog</code> + <code>showDialog()</code> を使っていました。<br>
+<code>Dialog</code> と <code>Dialog.fullscreen</code> を使い分ける分岐をして共通の子を渡すだけなので楽ですね。</p>
 <pre><code class="language-dart">showDialog(  
   context: context,  
   builder: (context) {  
     // コンテンツは共通  
     const dialogContent = DialogDetailScreen();  
   
+    // ウインドウ幅600をブレイクポイントとする  
     final showFullScreenDialog = MediaQuery.sizeOf(context).width &lt; 600;  
+  
     if (showFullScreenDialog) {  
-      // 全画面表示のダイアログ  
+      // 幅が狭ければ全画面表示のダイアログ  
       return const Dialog.fullScreen(child: dialogContent);  
     } else {  
+      // 幅が広ければモーダルダイアログ  
       return const Dialog(child: dialogContent);  
     }  
   },  
