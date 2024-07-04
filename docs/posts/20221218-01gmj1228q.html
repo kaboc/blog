@@ -100,6 +100,7 @@ microtask queue は event queue より先に処理されます。<br>
 <ul>
 <li>event queue に入る</li>
 <li><code>Future(() =&gt; v)</code> は <code>Future.delayed(Duration.zero, () =&gt; v)</code> と同等</li>
+<li><code>Future.value(Future(() =&gt; v))</code> は <code>Future(() =&gt; v)</code> が microtask queue に入り、順番が来ると <code>() =&gt; v</code> が event queue に入る</li>
 </ul>
 </li>
 </ul>
