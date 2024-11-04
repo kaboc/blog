@@ -54,7 +54,7 @@ gtag('config', 'G-8T92E4QR06');
 通知を有効にしたのに期限を省略する（または <code>null</code> を渡す）という誤った使い方をこの Todo クラスの使用側で確実に防ぐように対策していない場合に、本番の実行時に想定外の動作として初めて現れる可能性が残ります。</p>
 <p>また先ほどの Flutter の例では、「<code>child</code> と <code>builder</code> の両方渡してはいけない」というプレッシャーを使用者に与えるだけで不可能にはなっていないので、間違いが起こるかもしれません。<br>
 コンストラクタのドキュメントにはその注意書きもわざわざしなければならなくなります。</p>
-<h1 id="%E6%94%B9%E5%96%84%EF%BC%88%E3%82%B3%E3%83%B3%E3%82%B9%E3%83%88%E3%83%A9%E3%82%AF%E3%82%BF%E3%82%92%E5%88%86%E3%81%91%E3%82%8B%EF%BC%89">改善（コンストラクタを分ける）</h1>
+<h1 id="%E6%94%B9%E5%96%84%20%E2%80%93%20%E3%82%B3%E3%83%B3%E3%82%B9%E3%83%88%E3%83%A9%E3%82%AF%E3%82%BF%E3%82%92%E5%88%86%E3%81%91%E3%82%8B%201">改善 – コンストラクタを分ける 1</h1>
 <p>コンストラクタを分けることで使い方を制限するのが安全です。<br>
 名前付きコンストラクタを活用しましょう。</p>
 <pre><code class="language-dart">class Todo {  
@@ -101,6 +101,33 @@ gtag('config', 'G-8T92E4QR06');
 それどころか、non-nullable なプロパティに対する引数なのにわざわざ <code>null</code> を防ぐ assertion が行われている箇所が多数あって無駄に思えました（例： <a href="https://github.com/flutter/flutter/blob/1220245b330c94ec573d9f4801e93c5c72908f4f/packages/flutter/lib/src/widgets/basic.dart#L1924-L1931" target="_blank" rel="noopener">Padding クラスの padding</a>）。</p>
 <p>Null safety より前のコードを引きずったまま新しいバージョンで可能になった書き方を反映できていないだけかもしれません。</p>
 </details>
+<h1 id="%E6%94%B9%E5%96%84%20%E2%80%93%20%E3%82%B3%E3%83%B3%E3%82%B9%E3%83%88%E3%83%A9%E3%82%AF%E3%82%BF%E3%82%92%E5%88%86%E3%81%91%E3%82%8B%202">改善 – コンストラクタを分ける 2</h1>
+<p>上の方法では、使わないプロパティは初期化リストで初期化しないといけませんでした。<br>
+null でいい場合でも明示的な初期化が必要です。</p>
+<pre><code class="language-dart">const Todo(this.content)  
+    : dueAt = null,  
+      notify = false;  
+</code></pre>
+<p>この初期化リストの記述は、コンストラクタやプロパティの数が多いほど面倒になります。<br>
+その場合には <strong>redirecting factory コンストラクタ</strong>が役立ちます。</p>
+<pre><code class="language-dart">class Todo {  
+  const Todo._(this.content, {this.dueAt, this.notify = false});  
+  
+  const factory Todo(String content) = Todo._;  
+  
+  const factory Todo.schedule(  
+    String content, {  
+    required DateTime dueAt,  
+    bool notify,  
+  }) = Todo._;  
+  
+  final String content;  
+  final DateTime? dueAt;  
+  final bool notify;  
+}  
+</code></pre>
+<p>redirecting factory は他の種類のコンストラクタより少し難しいですが、うまく使うと便利です。<br>
+適所を見つけて活用したいですね。</p>
 <h1 id="%E3%82%AF%E3%83%A9%E3%82%B9%E8%87%AA%E4%BD%93%E3%82%92%E5%88%86%E3%81%91%E3%82%8B">クラス自体を分ける</h1>
 <p>コンストラクタを分けずにクラスを分ける方法も可能です。</p>
 <pre><code class="language-dart">class Todo {  
@@ -114,8 +141,8 @@ gtag('config', 'G-8T92E4QR06');
       : dueAt = null,  
         notify = false;  
   
-  // 上記の代わりにfactoryコンストラクタでもいい  
-  // factory Todo(String content) =&gt; Todo._(content);  
+  // 上記の代わりにfactoryかredirecting factoryでもいい  
+  // factory Todo(String content) = Todo._;  
   
   final String content;  
   final DateTime? dueAt;  
